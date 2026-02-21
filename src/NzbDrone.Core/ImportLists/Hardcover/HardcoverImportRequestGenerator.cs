@@ -61,11 +61,12 @@ namespace NzbDrone.Core.ImportLists.Hardcover
             var graphQlBody = JsonSerializer.Serialize(new
             {
                 query = @"
-                    query ListBooks($slugs: [String!]!) { me { lists(where: { slug: { _in: $slugs } } ) { slug name list_books { book { id title contributions { author { id name } } } } } } }
+                    query ListBooks($slugs: [String!]!,$user: citext) {users(where: {username: {_eq: $user}})  { lists(where: { slug: { _in: $slugs } } ) { slug name list_books { book { id title contributions { author { id name } } } } } } }
                 ",
                 variables = new
                 {
-                    slugs
+                    slugs,
+                    user = Settings.User
                 }
             });
 
