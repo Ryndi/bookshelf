@@ -1,62 +1,46 @@
 # bookshelf
 
-This is a revival of [Readarr](https://github.com/Readarr/Readarr). The images
-published are configured to use working Goodreads or Hardcover metadata out of
-the box.
+This fork merges [Bookshelf pull requests](https://github.com/pennydreadful/bookshelf/pulls)
+as Bookshelf has seemingly been abandoned.  As long as Bookshelf remains inactive this fork
+will continue to merge new pull requests.  If Bookshelf is ever updated and remains active
+this fork will defer to Bookshelf.
 
-Bookshelf is an ebook and audiobook collection manager for Usenet and BitTorrent
-users. It can monitor multiple RSS feeds for new books from your favorite
-authors and will grab, sort, and rename them. Note that only one type of a
-given book is supported. If you want both an audiobook and ebook of a given
-book you will need multiple instances.
+This repository is forked from Bookshelf commit c21c413, which was the latest at the time,
+and merges the following open pull requests:
+
+    - #163 feat(QBittorrent): port API-key auth from Radarr/Sonarr
+    - #162 fix(QBittorrentProxyV2): accept empty body as auth success (qBit >= 4.5)
+    - #161 fix(AudioTag): null-safe Diff() for OriginalReleaseDate
+    - #159 Corrected issue with updating book edition. (#96)
+    - #154 Add .NET Windows installer with safe upgrade and auto-rollback
+    - #151 Paginate large Goodreads series
+    - #149 Cleanse database connection string when logging
+    - #123 Change Hardcover Lists to be from any user by username
+    - #119 Update name_map.json
+
+Open pull requests not merged:
+
+    - #158 - Duplicate of #162 - Fix qBittorrent V2 auth check breaking against qBit 5.2.0+ (empty 204 response)
+    - #148 - Failed status checks - fix: improve ebook release name parsing and quality detection
+    - #132 - Failed status checks - Add configurable UI setting for import match threshold
+    - #128 - Failed merge - Add Hardcover reading status import support
 
 ## Getting Started
 
-The container listens on port 8787 and expects a volume mounted at `/config`.
+This fork is a direct drop-in replacement for your current Bookshelf installation.  The following are
+provided as examples only and may differ from your installation.
 
-    docker run -p 8787:8787 -v ~/.config/bookshelf:/config ghcr.io/pennydreadful/bookshelf:hardcover
+If you were previously using [Goodreads](https://www.goodreads.com) as your metadata provider:
 
-The `softcover` tags use [Goodreads](https://www.goodreads.com) as the metadata
-provider. The quality of this metadata is generally poor and contains a lot of
-slop. However, it is backward-compatible with existing Readarr databases and
-functionality like Goodreads list imports should continue to work normally.
+    docker run -p 8787:8787 -v ~/.config/bookshelf:/config ghcr.io/klein1jo/bookshelf:softcover
 
-The `hardcover` tags use [Hardcover](https://hardcover.app/home) as a metadata
-provider. This metadata is higher quality but isn't backward-compatible; if
-you're already running Readarr you'll need to redeploy this from scratch.
-Goodreads list imports haven't been tested and likely don't work.
+If you were previously using [Hardcover](https://hardcover.app/home) as a metadata provider:
+
+    docker run -p 8787:8787 -v ~/.config/bookshelf:/config ghcr.io/klein1jo/bookshelf:hardcover
 
 ## Support
 
-This project won't use Discord for support. If you have a problem please file
-an issue or start a discussion.
+I offer no support.  Issues and pull requests have been disabled on this repository.  If you have
+an issue or wish to submit a pull request please do so to [Bookshelf](https://github.com/pennydreadful/bookshelf)
+so that they are captured in the upstream.
 
-## Contributors & Developers
-
-Help is very welcome. Priority is on fixing quality of life issues
-
-- [ ] Monitor series.
-- [ ] Support ebook and audio files in the same root.
-
-Already done
-
-- [x] Native support for MyAnonaMouse without Prowlarr.
-- [x] Hardcover list import.
-- [x] Improved matching.
-- [x] Metadata is no longer cached locally.
-- [x] Removed servarr analytics spyware.
-- [x] Supports selfhosted metadata (UI or `METADATA_URL` env var).
-
-## Sponsors
-
-If you ever donated to [this](https://opencollective.com/readarr) project you
-should request a refund. Those people don't deserve your money.
-
-### License
-
-The is a derivative work of the [Readarr](https://github.com/Readarr/Readarr)
-and [Prowlarr](https://github.com/Prowlarr/Prowlarr) projects which are both
-licensed [GPLv3](http://www.gnu.org/licenses/gpl.html). This project is
-therefore also licensed under the terms of GPLv3.
-
-Copyright 2025-2026
