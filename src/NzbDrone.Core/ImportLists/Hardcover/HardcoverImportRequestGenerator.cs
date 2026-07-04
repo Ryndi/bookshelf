@@ -76,20 +76,24 @@ namespace NzbDrone.Core.ImportLists.Hardcover
         private IEnumerable<ImportListRequest> GetStatusRequests(List<int> statusIds)
         {
             var apiKey = NormalizeApiKey(Settings.ApiKey);
-
             Logger.Info("Hardcover: Fetching books for reading statuses '{0}'", string.Join(", ", statusIds));
-
             var graphQlBody = JsonSerializer.Serialize(new
             {
                 query = @"
-                    query UserBooks($statusIds: [Int!]!) { me { user_books(where: { status_id: { _in: $statusIds } }) { book { id title contributions { author { id name } } } } } }
+                    query UserBooks($statusIds: [Int!]!, $user: citext) {
+                        users(where: { username: { _eq: $user } }) {
+                            user_books(where: { status_id: { _in: $statusIds } }) {
+                                book { id title contributions { author { id name } } }
+                            }
+                        }
+                    }
                 ",
                 variables = new
                 {
-                    statusIds
+                    statusIds,
+                    user = Settings.User
                 }
             });
-
             yield return new ImportListRequest(BuildRequest(apiKey, graphQlBody));
         }
 
