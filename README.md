@@ -24,7 +24,7 @@ Open pull requests not merged:
     - #158 - Duplicate of pull request #162 - Fix qBittorrent V2 auth check breaking against qBit 5.2.0+ (empty 204 response)
     - #132 - Failed status checks - Add configurable UI setting for import match threshold
     - #128 - Integrated by pull request #171 - Add Hardcover reading status import support
-    - #123 - Integrated by request #171 - Change Hardcover Lists to be from any user by username
+    - #123 - Integrated by pull request #171 - Change Hardcover Lists to be from any user by username
 
 ## Getting Started
 
