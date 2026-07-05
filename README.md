@@ -8,6 +8,7 @@ this fork will defer to Bookshelf.
 This repository is forked from Bookshelf commit c21c413, which was the latest at the time,
 and merges the following open pull requests:
 
+    - #171 Hardcover import from any username and reading status
     - #163 feat(QBittorrent): port API-key auth from Radarr/Sonarr
     - #162 fix(QBittorrentProxyV2): accept empty body as auth success (qBit >= 4.5)
     - #161 fix(AudioTag): null-safe Diff() for OriginalReleaseDate
@@ -15,15 +16,15 @@ and merges the following open pull requests:
     - #154 Add .NET Windows installer with safe upgrade and auto-rollback
     - #151 Paginate large Goodreads series
     - #149 Cleanse database connection string when logging
-    - #123 Change Hardcover Lists to be from any user by username
     - #119 Update name_map.json
 
 Open pull requests not merged:
 
-    - #158 - Duplicate of #162 - Fix qBittorrent V2 auth check breaking against qBit 5.2.0+ (empty 204 response)
-    - #148 - Failed status checks - fix: improve ebook release name parsing and quality detection
+    - #170 - Duplicate of pull request #162 - Fix qBittorrent 5.2.0 authentication failure (HTTP 204 on login)
+    - #158 - Duplicate of pull request #162 - Fix qBittorrent V2 auth check breaking against qBit 5.2.0+ (empty 204 response)
     - #132 - Failed status checks - Add configurable UI setting for import match threshold
-    - #128 - Failed merge - Add Hardcover reading status import support
+    - #128 - Integrated by pull request #171 - Add Hardcover reading status import support
+    - #123 - Integrated by request #171 - Change Hardcover Lists to be from any user by username
 
 ## Getting Started
 
