@@ -79,18 +79,33 @@ namespace NzbDrone.Core.IndexerSearch
         public async Task<List<DownloadDecision>> BookSearch(Book book, bool missingOnly, bool userInvokedSearch, bool interactiveSearch)
         {
             var author = _authorService.GetAuthor(book.AuthorId);
+            var decisions = new List<DownloadDecision>();
 
-            var searchSpec = Get<BookSearchCriteria>(author, new List<Book> { book }, userInvokedSearch, interactiveSearch);
+            // A book monitors one edition per format, and an audiobook edition is often titled
+            // differently to the ebook, so each distinct title is searched on its own. Editions
+            // that share a title are searched once rather than hitting indexers twice.
+            var titles = book.Editions.Value
+                .Where(x => x.Monitored && x.Title.IsNotNullOrWhiteSpace())
+                .Select(x => x.Title)
+                .Distinct(StringComparer.InvariantCultureIgnoreCase)
+                .ToList();
 
-            searchSpec.BookTitle = book.Editions.Value.PrimaryMonitored()?.Title;
-
-            // searchSpec.BookIsbn = book.Isbn13;
-            if (book.ReleaseDate.HasValue)
+            foreach (var title in titles)
             {
-                searchSpec.BookYear = book.ReleaseDate.Value.Year;
+                var searchSpec = Get<BookSearchCriteria>(author, new List<Book> { book }, userInvokedSearch, interactiveSearch);
+
+                searchSpec.BookTitle = title;
+
+                // searchSpec.BookIsbn = book.Isbn13;
+                if (book.ReleaseDate.HasValue)
+                {
+                    searchSpec.BookYear = book.ReleaseDate.Value.Year;
+                }
+
+                decisions.AddRange(await Dispatch(indexer => indexer.Fetch(searchSpec), searchSpec));
             }
 
-            return await Dispatch(indexer => indexer.Fetch(searchSpec), searchSpec);
+            return DeDupeDecisions(decisions);
         }
 
         private TSpec Get<TSpec>(Author author, List<Book> books, bool userInvokedSearch, bool interactiveSearch)
