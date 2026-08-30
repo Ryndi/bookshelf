@@ -1,9 +1,8 @@
 import _ from 'lodash';
+import { AUDIO_QUALITY_IDS } from './isAudioQuality';
 
-// Mirrors Quality.AudioIds in src/NzbDrone.Core/Qualities/Quality.cs. Quality ids are persisted
-// in the database, so they are fixed. A group counts as audio if any member quality is.
-const AUDIO_QUALITY_IDS = [10, 11, 12, 13];
-
+// Takes a quality profile item, which is either a single quality or a group of them.
+// A group counts as audio if any member quality is.
 export default function isAudioQualityItem(item) {
   if (!item) {
     return false;

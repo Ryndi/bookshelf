@@ -21,6 +21,7 @@ import OrganizePreviewModalConnector from 'Organize/OrganizePreviewModalConnecto
 import RetagPreviewModalConnector from 'Retag/RetagPreviewModalConnector';
 import translate from 'Utilities/String/translate';
 import BookDetailsHeaderConnector from './BookDetailsHeaderConnector';
+import BookFormatFilter, { ALL } from './BookFormatFilter';
 import styles from './BookDetails.css';
 
 class BookDetails extends Component {
@@ -36,7 +37,8 @@ class BookDetails extends Component {
       isRetagModalOpen: false,
       isEditBookModalOpen: false,
       isDeleteBookModalOpen: false,
-      selectedTabIndex: 0
+      selectedTabIndex: 0,
+      formatFilter: ALL
     };
   }
 
@@ -82,6 +84,11 @@ class BookDetails extends Component {
     this.setState({ selectedTabIndex: index });
   };
 
+  // Shared across the tabs so switching between them keeps the chosen format.
+  onFormatFilterChange = (formatFilter) => {
+    this.setState({ formatFilter });
+  };
+
   //
   // Render
 
@@ -112,7 +119,8 @@ class BookDetails extends Component {
       isRetagModalOpen,
       isEditBookModalOpen,
       isDeleteBookModalOpen,
-      selectedTabIndex
+      selectedTabIndex,
+      formatFilter
     } = this.state;
 
     return (
@@ -272,23 +280,38 @@ class BookDetails extends Component {
               </TabList>
 
               <TabPanel>
+                <BookFormatFilter
+                  value={formatFilter}
+                  onChange={this.onFormatFilterChange}
+                />
                 <AuthorHistoryTable
                   authorId={author.id}
                   bookId={id}
+                  formatFilter={formatFilter}
                 />
               </TabPanel>
 
               <TabPanel>
+                <BookFormatFilter
+                  value={formatFilter}
+                  onChange={this.onFormatFilterChange}
+                />
                 <InteractiveSearchTable
                   bookId={id}
                   type="book"
+                  formatFilter={formatFilter}
                 />
               </TabPanel>
 
               <TabPanel>
+                <BookFormatFilter
+                  value={formatFilter}
+                  onChange={this.onFormatFilterChange}
+                />
                 <BookFileEditorTable
                   authorId={author.id}
                   bookId={id}
+                  formatFilter={formatFilter}
                 />
               </TabPanel>
             </Tabs>
