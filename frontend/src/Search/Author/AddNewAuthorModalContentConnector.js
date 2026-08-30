@@ -62,9 +62,14 @@ class AddNewAuthorModalContentConnector extends Component {
       monitor,
       monitorNewItems,
       qualityProfileId,
+      searchAudiobooks,
+      audiobookQualityProfileId,
+      audiobookRootFolderPath,
       metadataProfileId,
       tags
     } = this.props;
+
+    const wantsAudiobooks = Boolean(searchAudiobooks && searchAudiobooks.value);
 
     this.props.addAuthor({
       foreignAuthorId,
@@ -72,6 +77,12 @@ class AddNewAuthorModalContentConnector extends Component {
       monitor: monitor.value,
       monitorNewItems: monitorNewItems.value,
       qualityProfileId: qualityProfileId.value,
+      searchAudiobooks: wantsAudiobooks,
+
+      // Only sent when the toggle is on, so an audiobook profile left over from a previous
+      // add does not attach itself to an author that is not tracking audiobooks.
+      audiobookQualityProfileId: wantsAudiobooks ? audiobookQualityProfileId.value : 0,
+      audiobookRootFolderPath: wantsAudiobooks ? audiobookRootFolderPath.value : '',
       metadataProfileId: metadataProfileId.value,
       tags: tags.value,
       searchForMissingBooks
@@ -98,6 +109,9 @@ AddNewAuthorModalContentConnector.propTypes = {
   monitor: PropTypes.object.isRequired,
   monitorNewItems: PropTypes.object.isRequired,
   qualityProfileId: PropTypes.object,
+  searchAudiobooks: PropTypes.object,
+  audiobookQualityProfileId: PropTypes.object,
+  audiobookRootFolderPath: PropTypes.object,
   metadataProfileId: PropTypes.object,
   tags: PropTypes.object.isRequired,
   onModalClose: PropTypes.func.isRequired,

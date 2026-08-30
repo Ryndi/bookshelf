@@ -35,6 +35,9 @@ class AddAuthorOptionsForm extends Component {
       monitor,
       monitorNewItems,
       qualityProfileId,
+      searchAudiobooks,
+      audiobookQualityProfileId,
+      audiobookRootFolderPath,
       metadataProfileId,
       includeNoneMetadataProfile,
       includeSpecificBookMonitor,
@@ -45,6 +48,8 @@ class AddAuthorOptionsForm extends Component {
       onInputChange,
       ...otherProps
     } = this.props;
+
+    const wantsAudiobooks = Boolean(searchAudiobooks && searchAudiobooks.value);
 
     return (
       <Form {...otherProps}>
@@ -135,6 +140,54 @@ class AddAuthorOptionsForm extends Component {
           />
         </FormGroup>
 
+        <FormGroup>
+          <FormLabel>
+            {translate('SearchAudiobooks')}
+          </FormLabel>
+
+          <FormInputGroup
+            type={inputTypes.CHECK}
+            name="searchAudiobooks"
+            helpText={translate('SearchAudiobooksHelpText')}
+            {...searchAudiobooks}
+            onChange={onInputChange}
+          />
+        </FormGroup>
+
+        {
+          wantsAudiobooks &&
+            <FormGroup>
+              <FormLabel>
+                {translate('AudiobookQualityProfile')}
+              </FormLabel>
+
+              <FormInputGroup
+                type={inputTypes.QUALITY_PROFILE_SELECT}
+                name="audiobookQualityProfileId"
+                helpText={translate('AudiobookQualityProfileHelpText')}
+                {...audiobookQualityProfileId}
+                onChange={onInputChange}
+              />
+            </FormGroup>
+        }
+
+        {
+          wantsAudiobooks &&
+            <FormGroup>
+              <FormLabel>
+                {translate('AudiobookRootFolder')}
+              </FormLabel>
+
+              <FormInputGroup
+                type={inputTypes.ROOT_FOLDER_SELECT}
+                name="audiobookRootFolderPath"
+                helpText={translate('AudiobookRootFolderHelpText')}
+                {...audiobookRootFolderPath}
+                onChange={onInputChange}
+              />
+            </FormGroup>
+        }
+
         <FormGroup className={showMetadataProfile ? undefined : styles.hideMetadataProfile}>
           <FormLabel>
             {translate('MetadataProfile')}
@@ -186,6 +239,9 @@ AddAuthorOptionsForm.propTypes = {
   monitor: PropTypes.object.isRequired,
   monitorNewItems: PropTypes.object.isRequired,
   qualityProfileId: PropTypes.object,
+  searchAudiobooks: PropTypes.object,
+  audiobookQualityProfileId: PropTypes.object,
+  audiobookRootFolderPath: PropTypes.object,
   metadataProfileId: PropTypes.object,
   showMetadataProfile: PropTypes.bool.isRequired,
   includeNoneMetadataProfile: PropTypes.bool.isRequired,

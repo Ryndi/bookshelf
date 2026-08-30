@@ -49,6 +49,23 @@ namespace Readarr.Api.V1.Author
                     author.MetadataProfileId = resource.MetadataProfileId.Value;
                 }
 
+                if (resource.SearchAudiobooks.HasValue)
+                {
+                    author.SearchAudiobooks = resource.SearchAudiobooks.Value;
+                }
+
+                if (resource.AudiobookQualityProfileId.HasValue)
+                {
+                    author.AudiobookQualityProfileId = resource.AudiobookQualityProfileId.Value;
+                }
+
+                // AudiobookPath is rebuilt from this by UpdateAuthors, so no move is queued -
+                // the audiobook files stay where they are until they are moved deliberately.
+                if (resource.AudiobookRootFolderPath.IsNotNullOrWhiteSpace())
+                {
+                    author.AudiobookRootFolderPath = resource.AudiobookRootFolderPath;
+                }
+
                 if (resource.RootFolderPath.IsNotNullOrWhiteSpace())
                 {
                     author.RootFolderPath = resource.RootFolderPath;

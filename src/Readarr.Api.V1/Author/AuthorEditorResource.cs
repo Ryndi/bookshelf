@@ -10,6 +10,9 @@ namespace Readarr.Api.V1.Author
         public NewItemMonitorTypes? MonitorNewItems { get; set; }
         public int? QualityProfileId { get; set; }
         public int? MetadataProfileId { get; set; }
+        public bool? SearchAudiobooks { get; set; }
+        public int? AudiobookQualityProfileId { get; set; }
+        public string AudiobookRootFolderPath { get; set; }
         public string RootFolderPath { get; set; }
         public List<int> Tags { get; set; }
         public ApplyTags ApplyTags { get; set; }
