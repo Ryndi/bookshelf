@@ -21,6 +21,9 @@ namespace Readarr.Api.V1.Books
         public string Overview { get; set; }
         public string Format { get; set; }
         public bool IsEbook { get; set; }
+
+        // Derived from Format so the UI doesn't have to duplicate the format lists.
+        public bool IsAudiobook { get; set; }
         public string Disambiguation { get; set; }
         public string Publisher { get; set; }
         public int PageCount { get; set; }
@@ -60,6 +63,7 @@ namespace Readarr.Api.V1.Books
                 Overview = model.Overview,
                 Format = model.Format,
                 IsEbook = model.IsEbook,
+                IsAudiobook = BookFormat.IsAudiobook(model.Format),
                 Disambiguation = model.Disambiguation,
                 Publisher = model.Publisher,
                 PageCount = model.PageCount,

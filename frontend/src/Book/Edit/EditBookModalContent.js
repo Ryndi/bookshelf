@@ -56,6 +56,11 @@ class EditBookModalContent extends Component {
     const hasFile = statistics ? statistics.bookFileCount > 0 : false;
     const errorMessage = getErrorMessage(error, 'Unable to load editions');
 
+    // A book monitors one edition per format, so each format gets its own picker.
+    const editionList = editions && editions.value ? editions.value : [];
+    const hasEbookEditions = editionList.some((e) => !e.isAudiobook);
+    const hasAudiobookEditions = editionList.some((e) => e.isAudiobook);
+
     return (
       <ModalContent onModalClose={onModalClose}>
         <ModalHeader>
@@ -105,10 +110,10 @@ class EditBookModalContent extends Component {
             }
 
             {
-              isPopulated && !isFetching && !!editions.value.length &&
+              isPopulated && !isFetching && hasEbookEditions &&
                 <FormGroup>
                   <FormLabel>
-                    {translate('Edition')}
+                    {translate('EbookEdition')}
                   </FormLabel>
 
                   <FormInputGroup
@@ -117,6 +122,26 @@ class EditBookModalContent extends Component {
                     helpText={translate('EditionsHelpText')}
                     isDisabled={anyEditionOk.value && hasFile}
                     bookEditions={editions}
+                    isAudiobook={false}
+                    onChange={onInputChange}
+                  />
+                </FormGroup>
+            }
+
+            {
+              isPopulated && !isFetching && hasAudiobookEditions &&
+                <FormGroup>
+                  <FormLabel>
+                    {translate('AudiobookEdition')}
+                  </FormLabel>
+
+                  <FormInputGroup
+                    type={inputTypes.BOOK_EDITION_SELECT}
+                    name="editions"
+                    helpText={translate('EditionsHelpText')}
+                    isDisabled={anyEditionOk.value && hasFile}
+                    bookEditions={editions}
+                    isAudiobook={true}
                     onChange={onInputChange}
                   />
                 </FormGroup>
