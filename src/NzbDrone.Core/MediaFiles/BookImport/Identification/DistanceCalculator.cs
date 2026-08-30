@@ -22,10 +22,6 @@ namespace NzbDrone.Core.MediaFiles.BookImport.Identification
 
         private static readonly RegexReplace CleanTitleCruft = new RegexReplace(@"\((?:unabridged)\)", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-        private static readonly List<string> EbookFormats = new List<string> { "Kindle Edition", "Nook", "ebook" };
-
-        private static readonly List<string> AudiobookFormats = new List<string> { "Audiobook", "Audio CD", "Audio Cassette", "Audible Audio", "CD-ROM", "MP3 CD" };
-
         public static Distance BookDistance(List<LocalBook> localTracks, Edition edition)
         {
             var dist = new Distance();
@@ -144,15 +140,15 @@ namespace NzbDrone.Core.MediaFiles.BookImport.Identification
                 if (!isAudio)
                 {
                     // text books should prefer ebook formats
-                    dist.AddBool("ebook_format", !EbookFormats.Contains(edition.Format));
+                    dist.AddBool("ebook_format", !BookFormat.IsEbook(edition.Format));
 
                     // text books should not match audio entries
-                    dist.AddBool("wrong_format", AudiobookFormats.Contains(edition.Format));
+                    dist.AddBool("wrong_format", BookFormat.IsAudiobook(edition.Format));
                 }
                 else
                 {
                     // audio books should prefer audio formats
-                    dist.AddBool("audio_format", !AudiobookFormats.Contains(edition.Format));
+                    dist.AddBool("audio_format", !BookFormat.IsAudiobook(edition.Format));
                 }
             }
 

@@ -210,9 +210,19 @@ namespace NzbDrone.Core.Books
         {
             _logger.Warn($"Book {local} was merged with {remote} because the original was a duplicate.");
 
-            // Update book ids for trackfiles
+            // Update book ids for trackfiles, mapping each file onto the monitored edition of its
+            // own format so merging doesn't file an audiobook under an ebook edition.
             var files = _mediaFileService.GetFilesByBook(local.Id);
-            files.ForEach(x => x.EditionId = target.Editions.Value.Single(e => e.Monitored).Id);
+            var targetEditions = target.Editions.Value;
+
+            foreach (var file in files)
+            {
+                var isAudio = MediaFileExtensions.IsAudioFile(file.Path);
+
+                file.EditionId = (targetEditions.FirstOrDefault(e => e.Monitored && BookFormat.IsAudiobook(e) == isAudio)
+                                  ?? targetEditions.PrimaryMonitored()).Id;
+            }
+
             _mediaFileService.Update(files);
 
             // Update book ids for history
@@ -277,45 +287,60 @@ namespace NzbDrone.Core.Books
             // hack - add the chilren in refresh children so we can control monitored status
         }
 
-        private void MonitorSingleEdition(SortedChildren children)
+        private void MonitorSingleEditionPerFormat(SortedChildren children)
         {
             children.Old.ForEach(x => x.Monitored = false);
-            var monitored = children.Future.Where(x => x.Monitored).ToList();
 
-            if (monitored.Count == 1)
-            {
-                return;
-            }
-
-            if (monitored.Count == 0)
-            {
-                monitored = children.Future;
-            }
-
-            if (monitored.Count == 0)
+            if (children.Future.Count == 0)
             {
                 // there are no future children so nothing to do
                 return;
             }
 
-            var toMonitor = monitored.OrderByDescending(x => x.Id > 0 ? _mediaFileService.GetFilesByEdition(x.Id).Count : 0)
-                .ThenByDescending(x => x.Ratings.Popularity).First();
+            var touched = new List<Edition>();
 
-            monitored.ForEach(x => x.Monitored = false);
-            toMonitor.Monitored = true;
+            foreach (var format in children.Future.GroupBy(x => BookFormat.IsAudiobook(x)))
+            {
+                var monitored = format.Where(x => x.Monitored).ToList();
+
+                // A format the user never asked for is left alone; the fallback below covers the
+                // case where that leaves the book with nothing monitored at all.
+                if (monitored.Count <= 1)
+                {
+                    continue;
+                }
+
+                var toMonitor = PickEditionToMonitor(monitored);
+                monitored.ForEach(x => x.Monitored = false);
+                toMonitor.Monitored = true;
+                touched.AddRange(monitored);
+            }
+
+            if (!children.Future.Any(x => x.Monitored))
+            {
+                var fallback = PickEditionToMonitor(children.Future);
+                fallback.Monitored = true;
+                touched.Add(fallback);
+            }
 
             // force update of anything we've messed with
-            var extraToUpdate = children.UpToDate.Where(x => monitored.Contains(x));
+            var extraToUpdate = children.UpToDate.Where(x => touched.Contains(x)).ToList();
             children.UpToDate = children.UpToDate.Except(extraToUpdate).ToList();
             children.Updated.AddRange(extraToUpdate);
 
-            Debug.Assert(!children.Future.Any() || children.Future.Count(x => x.Monitored) == 1, "one edition monitored");
+            Debug.Assert(children.Future.GroupBy(x => BookFormat.IsAudiobook(x)).All(g => g.Count(x => x.Monitored) <= 1), "at most one edition monitored per format");
+        }
+
+        private Edition PickEditionToMonitor(List<Edition> editions)
+        {
+            return editions.OrderByDescending(x => x.Id > 0 ? _mediaFileService.GetFilesByEdition(x.Id).Count : 0)
+                .ThenByDescending(x => x.Ratings.Popularity).First();
         }
 
         protected override bool RefreshChildren(SortedChildren localChildren, List<Edition> remoteChildren, Author remoteData, bool forceChildRefresh, bool forceUpdateFileTags, DateTime? lastUpdate)
         {
-            // make sure only one of the releases ends up monitored
-            MonitorSingleEdition(localChildren);
+            // make sure only one of the releases per format ends up monitored
+            MonitorSingleEditionPerFormat(localChildren);
 
             localChildren.All.ForEach(x => _logger.Trace($"release: {x} monitored: {x.Monitored}"));
 

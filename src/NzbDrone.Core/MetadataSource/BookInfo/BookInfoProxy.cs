@@ -922,7 +922,7 @@ namespace NzbDrone.Core.MetadataSource.BookInfo
                 }
             }
 
-            Debug.Assert(!book.Editions.Value.Any() || book.Editions.Value.Count(x => x.Monitored) == 1, "one edition monitored");
+            Debug.Assert(book.Editions.Value.GroupBy(x => BookFormat.IsAudiobook(x)).All(g => g.Count(x => x.Monitored) <= 1), "at most one edition monitored per format");
 
             book.AnyEditionOk = true;
 

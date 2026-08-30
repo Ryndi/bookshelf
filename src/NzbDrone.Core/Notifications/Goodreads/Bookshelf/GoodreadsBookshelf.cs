@@ -4,6 +4,7 @@ using System.Linq;
 using NLog;
 using NzbDrone.Common.Extensions;
 using NzbDrone.Common.Http;
+using NzbDrone.Core.Books;
 using NzbDrone.Core.MetadataSource.Goodreads;
 using NzbDrone.Core.Validation;
 
@@ -36,7 +37,7 @@ namespace NzbDrone.Core.Notifications.Goodreads
                 }
             }
 
-            var bookId = importedBook.Editions.Value.Single(x => x.Monitored).ForeignEditionId;
+            var bookId = importedBook.Editions.Value.PrimaryMonitored()?.ForeignEditionId;
             AddToShelves(bookId, Settings.AddIds);
         }
 

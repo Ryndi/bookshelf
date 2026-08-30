@@ -96,8 +96,16 @@ namespace NzbDrone.Core.Books
         public List<Edition> SetMonitored(Edition edition)
         {
             var allEditions = FindByBook(new[] { edition.BookId });
-            allEditions.ForEach(r => r.Monitored = r.Id == edition.Id);
-            Ensure.That(allEditions.Count(x => x.Monitored) == 1).IsTrue();
+            var isAudiobook = BookFormat.IsAudiobook(edition);
+
+            // Only editions of the same format are unmonitored, so an ebook and an audiobook of
+            // the same book can be tracked side by side.
+            foreach (var other in allEditions.Where(r => BookFormat.IsAudiobook(r) == isAudiobook))
+            {
+                other.Monitored = other.Id == edition.Id;
+            }
+
+            Ensure.That(allEditions.Count(x => x.Monitored && BookFormat.IsAudiobook(x) == isAudiobook) == 1).IsTrue();
             UpdateMany(allEditions);
             return allEditions;
         }
