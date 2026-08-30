@@ -41,6 +41,9 @@ function createMapStateToProps() {
         'monitored',
         'monitorNewItems',
         'qualityProfileId',
+        'audiobookQualityProfileId',
+        'searchAudiobooks',
+        'audiobookPath',
         'metadataProfileId',
         'path',
         'tags'

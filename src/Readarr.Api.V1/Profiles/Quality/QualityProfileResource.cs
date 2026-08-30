@@ -54,7 +54,10 @@ namespace Readarr.Api.V1.Profiles.Quality
                 Name = model.Name,
                 UpgradeAllowed = model.UpgradeAllowed,
                 Cutoff = model.Cutoff,
-                AudiobookCutoff = model.AudiobookCutoff,
+
+                // Report the cutoff actually in force rather than the unset zero, so clients
+                // never have to reproduce the fallback to the first allowed audiobook quality.
+                AudiobookCutoff = model.CutoffFor(true),
                 Items = model.Items.ConvertAll(ToResource),
                 MinFormatScore = model.MinFormatScore,
                 CutoffFormatScore = model.CutoffFormatScore,

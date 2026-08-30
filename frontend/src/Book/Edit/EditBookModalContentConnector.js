@@ -31,7 +31,8 @@ function createMapStateToProps() {
 
       const bookSettings = _.pick(book, [
         'monitored',
-        'anyEditionOk'
+        'anyEditionOk',
+        'searchAudiobooks'
       ]);
       bookSettings.editions = editionState.items;
 

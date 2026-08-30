@@ -84,6 +84,8 @@ class EditAuthorModalContent extends Component {
       tags
     } = item;
 
+    const wantsAudiobooks = Boolean(searchAudiobooks && searchAudiobooks.value);
+
     return (
       <ModalContent onModalClose={onModalClose}>
         <ModalHeader>
@@ -159,7 +161,7 @@ class EditAuthorModalContent extends Component {
             </FormGroup>
 
             {
-              searchAudiobooks.value &&
+              wantsAudiobooks &&
                 <FormGroup>
                   <FormLabel>
                     {translate('AudiobookQualityProfile')}
@@ -176,7 +178,7 @@ class EditAuthorModalContent extends Component {
             }
 
             {
-              searchAudiobooks.value &&
+              wantsAudiobooks &&
                 <FormGroup>
                   <FormLabel>
                     {translate('AudiobookPath')}

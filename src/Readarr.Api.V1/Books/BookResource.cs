@@ -108,7 +108,7 @@ namespace Readarr.Api.V1.Books
                 Monitored = resource.Monitored,
                 AnyEditionOk = resource.AnyEditionOk,
                 SearchAudiobooks = resource.SearchAudiobooks,
-                Editions = resource.Editions.ToModel(),
+                Editions = resource.Editions?.ToModel() ?? new List<Edition>(),
                 AddOptions = resource.AddOptions,
                 Author = author,
                 AuthorMetadata = author.Metadata.Value
@@ -120,7 +120,13 @@ namespace Readarr.Api.V1.Books
             var updatedBook = resource.ToModel();
 
             book.ApplyChanges(updatedBook);
-            book.Editions = updatedBook.Editions;
+
+            // A caller may post without an editions array; keep the book's existing editions
+            // rather than clearing them.
+            if (resource.Editions != null)
+            {
+                book.Editions = updatedBook.Editions;
+            }
 
             return book;
         }

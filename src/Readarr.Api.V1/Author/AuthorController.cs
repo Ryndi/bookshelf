@@ -89,6 +89,14 @@ namespace Readarr.Api.V1.Author
             SharedValidator.RuleFor(s => s.QualityProfileId).SetValidator(qualityProfileExistsValidator);
             SharedValidator.RuleFor(s => s.MetadataProfileId).SetValidator(metadataProfileExistsValidator);
 
+            // Without a profile that allows audio qualities every audiobook release would be
+            // rejected, leaving the book permanently wanted, so require one when the flag is on.
+            SharedValidator.RuleFor(s => s.AudiobookQualityProfileId)
+                           .Cascade(CascadeMode.Stop)
+                           .GreaterThan(0)
+                           .SetValidator(qualityProfileExistsValidator)
+                           .When(s => s.SearchAudiobooks);
+
             PostValidator.RuleFor(s => s.Path).IsValidPath().When(s => s.RootFolderPath.IsNullOrWhiteSpace());
             PostValidator.RuleFor(s => s.RootFolderPath)
                          .IsValidPath()
