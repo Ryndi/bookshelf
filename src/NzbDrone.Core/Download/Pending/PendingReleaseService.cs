@@ -407,7 +407,7 @@ namespace NzbDrone.Core.Download.Pending
                 return;
             }
 
-            var profile = remoteBook.Author.QualityProfile.Value;
+            var profile = remoteBook.Author.ProfileFor(remoteBook.ParsedBookInfo.Quality);
 
             foreach (var existingReport in existingReports)
             {

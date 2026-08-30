@@ -37,7 +37,7 @@ namespace NzbDrone.Core.DecisionEngine.Specifications
 
                 var customFormats = _formatService.ParseCustomFormat(file);
 
-                if (!_upgradableSpecification.IsUpgradable(subject.Author.QualityProfile,
+                if (!_upgradableSpecification.IsUpgradable(subject.Author.ProfileFor(subject.ParsedBookInfo.Quality),
                                                            file.Quality,
                                                            customFormats,
                                                            subject.ParsedBookInfo.Quality,

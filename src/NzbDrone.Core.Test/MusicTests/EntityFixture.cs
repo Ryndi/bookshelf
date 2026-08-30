@@ -121,6 +121,12 @@ namespace NzbDrone.Core.Test.MusicTests
             {
                 prop.SetValue(item2, !(bool)prop.GetValue(item1));
             }
+            else if (prop.PropertyType == typeof(bool?))
+            {
+                // Two generated entities can easily land on the same nullable bool, so pick the
+                // opposite value rather than copying from the other entity.
+                prop.SetValue(item2, (bool?)((bool?)prop.GetValue(item1) != true));
+            }
             else
             {
                 prop.SetValue(item2, prop.GetValue(different));
@@ -173,6 +179,12 @@ namespace NzbDrone.Core.Test.MusicTests
             if (prop.PropertyType == typeof(bool))
             {
                 prop.SetValue(item2, !(bool)prop.GetValue(item1));
+            }
+            else if (prop.PropertyType == typeof(bool?))
+            {
+                // Two generated entities can easily land on the same nullable bool, so pick the
+                // opposite value rather than copying from the other entity.
+                prop.SetValue(item2, (bool?)((bool?)prop.GetValue(item1) != true));
             }
             else
             {
@@ -230,6 +242,12 @@ namespace NzbDrone.Core.Test.MusicTests
             if (prop.PropertyType == typeof(bool))
             {
                 prop.SetValue(item2, !(bool)prop.GetValue(item1));
+            }
+            else if (prop.PropertyType == typeof(bool?))
+            {
+                // Two generated entities can easily land on the same nullable bool, so pick the
+                // opposite value rather than copying from the other entity.
+                prop.SetValue(item2, (bool?)((bool?)prop.GetValue(item1) != true));
             }
             else
             {
