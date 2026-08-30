@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Equ;
 using NzbDrone.Common.Extensions;
 using NzbDrone.Core.Datastore;
+using NzbDrone.Core.MediaFiles;
 using NzbDrone.Core.Profiles.Metadata;
 using NzbDrone.Core.Profiles.Qualities;
 using NzbDrone.Core.Qualities;
@@ -33,6 +34,9 @@ namespace NzbDrone.Core.Books
         // own quality profile. Zero means the author is not tracking audiobooks.
         public int AudiobookQualityProfileId { get; set; }
         public bool SearchAudiobooks { get; set; }
+
+        // Where audiobook files are stored. Empty keeps them beside the ebooks in Path.
+        public string AudiobookPath { get; set; }
         public HashSet<int> Tags { get; set; }
         [MemberwiseEqualityIgnore]
         public AddAuthorOptions AddOptions { get; set; }
@@ -81,6 +85,18 @@ namespace NzbDrone.Core.Books
             return ProfileFor(quality?.Quality);
         }
 
+        // Audiobooks go to their own folder when one is configured, so the two formats can live
+        // under different root folders. Falling back to Path keeps existing libraries in place.
+        public string PathFor(Quality quality)
+        {
+            return Quality.IsAudio(quality) && AudiobookPath.IsNotNullOrWhiteSpace() ? AudiobookPath : Path;
+        }
+
+        public string PathForExtension(string extension)
+        {
+            return MediaFileExtensions.IsAudioFile(extension) && AudiobookPath.IsNotNullOrWhiteSpace() ? AudiobookPath : Path;
+        }
+
         public override string ToString()
         {
             return string.Format("[{0}][{1}]", Metadata.Value.ForeignAuthorId.NullSafe(), Metadata.Value.Name.NullSafe());
@@ -106,6 +122,7 @@ namespace NzbDrone.Core.Books
             AudiobookQualityProfileId = other.AudiobookQualityProfileId;
             AudiobookQualityProfile = other.AudiobookQualityProfile;
             SearchAudiobooks = other.SearchAudiobooks;
+            AudiobookPath = other.AudiobookPath;
             MetadataProfileId = other.MetadataProfileId;
             MetadataProfile = other.MetadataProfile;
             Tags = other.Tags;
@@ -120,6 +137,7 @@ namespace NzbDrone.Core.Books
             AudiobookQualityProfileId = other.AudiobookQualityProfileId;
             AudiobookQualityProfile = other.AudiobookQualityProfile;
             SearchAudiobooks = other.SearchAudiobooks;
+            AudiobookPath = other.AudiobookPath;
             MetadataProfileId = other.MetadataProfileId;
             MetadataProfile = other.MetadataProfile;
 
