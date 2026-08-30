@@ -9,6 +9,7 @@ namespace NzbDrone.Core.Books
     public interface IBuildAuthorPaths
     {
         string BuildPath(Author author, bool useExistingRelativeFolder);
+        string BuildAudiobookPath(Author author);
     }
 
     public class AuthorPathBuilder : IBuildAuthorPaths
@@ -36,6 +37,18 @@ namespace NzbDrone.Core.Books
             }
 
             return Path.Combine(author.RootFolderPath, _fileNameBuilder.GetAuthorFolder(author));
+        }
+
+        // Uses the same author folder naming as the main path, so audiobooks are laid out under
+        // their root exactly the way ebooks are under theirs.
+        public string BuildAudiobookPath(Author author)
+        {
+            if (author.AudiobookRootFolderPath.IsNullOrWhiteSpace())
+            {
+                return null;
+            }
+
+            return Path.Combine(author.AudiobookRootFolderPath, _fileNameBuilder.GetAuthorFolder(author));
         }
 
         private string GetExistingRelativePath(Author author)

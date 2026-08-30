@@ -43,7 +43,7 @@ function createMapStateToProps() {
         'qualityProfileId',
         'audiobookQualityProfileId',
         'searchAudiobooks',
-        'audiobookPath',
+        'audiobookRootFolderPath',
         'metadataProfileId',
         'path',
         'tags'

@@ -35,7 +35,9 @@ namespace NzbDrone.Core.Books
         public int AudiobookQualityProfileId { get; set; }
         public bool SearchAudiobooks { get; set; }
 
-        // Where audiobook files are stored. Empty keeps them beside the ebooks in Path.
+        // The root the audiobook folder is built under. AudiobookPath is derived from it the
+        // same way Path is derived from RootFolderPath. Empty keeps audiobooks beside the ebooks.
+        public string AudiobookRootFolderPath { get; set; }
         public string AudiobookPath { get; set; }
         public HashSet<int> Tags { get; set; }
         [MemberwiseEqualityIgnore]
@@ -122,6 +124,7 @@ namespace NzbDrone.Core.Books
             AudiobookQualityProfileId = other.AudiobookQualityProfileId;
             AudiobookQualityProfile = other.AudiobookQualityProfile;
             SearchAudiobooks = other.SearchAudiobooks;
+            AudiobookRootFolderPath = other.AudiobookRootFolderPath;
             AudiobookPath = other.AudiobookPath;
             MetadataProfileId = other.MetadataProfileId;
             MetadataProfile = other.MetadataProfile;
@@ -137,6 +140,7 @@ namespace NzbDrone.Core.Books
             AudiobookQualityProfileId = other.AudiobookQualityProfileId;
             AudiobookQualityProfile = other.AudiobookQualityProfile;
             SearchAudiobooks = other.SearchAudiobooks;
+            AudiobookRootFolderPath = other.AudiobookRootFolderPath;
             AudiobookPath = other.AudiobookPath;
             MetadataProfileId = other.MetadataProfileId;
             MetadataProfile = other.MetadataProfile;

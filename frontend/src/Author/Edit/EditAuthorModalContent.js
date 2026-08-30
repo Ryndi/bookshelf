@@ -78,7 +78,7 @@ class EditAuthorModalContent extends Component {
       qualityProfileId,
       audiobookQualityProfileId,
       searchAudiobooks,
-      audiobookPath,
+      audiobookRootFolderPath,
       metadataProfileId,
       path,
       tags
@@ -181,15 +181,14 @@ class EditAuthorModalContent extends Component {
               wantsAudiobooks &&
                 <FormGroup>
                   <FormLabel>
-                    {translate('AudiobookPath')}
+                    {translate('AudiobookRootFolder')}
                   </FormLabel>
 
                   <FormInputGroup
-                    type={inputTypes.PATH}
-                    name="audiobookPath"
-                    helpText={translate('AudiobookPathHelpText')}
-                    includeFiles={false}
-                    {...audiobookPath}
+                    type={inputTypes.ROOT_FOLDER_SELECT}
+                    name="audiobookRootFolderPath"
+                    helpText={translate('AudiobookRootFolderHelpText')}
+                    {...audiobookRootFolderPath}
                     onChange={onInputChange}
                   />
                 </FormGroup>
