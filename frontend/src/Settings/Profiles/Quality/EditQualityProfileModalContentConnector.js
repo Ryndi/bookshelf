@@ -6,6 +6,7 @@ import { createSelector } from 'reselect';
 import { fetchQualityProfileSchema, saveQualityProfile, setQualityProfileValue } from 'Store/Actions/settingsActions';
 import createProfileInUseSelector from 'Store/Selectors/createProfileInUseSelector';
 import createProviderSettingsSelector from 'Store/Selectors/createProviderSettingsSelector';
+import isAudioQualityItem from 'Utilities/Quality/isAudioQualityItem';
 import EditQualityProfileModalContent from './EditQualityProfileModalContent';
 
 function getQualityItemGroupId(qualityProfile) {
@@ -31,7 +32,7 @@ function parseIndex(index) {
   ];
 }
 
-function createQualitiesSelector() {
+function createQualitiesSelector(audio) {
   return createSelector(
     createProviderSettingsSelector('qualityProfiles'),
     (qualityProfile) => {
@@ -40,8 +41,10 @@ function createQualitiesSelector() {
         return [];
       }
 
-      return _.reduceRight(items.value, (result, { allowed, id, name, quality }) => {
-        if (allowed) {
+      return _.reduceRight(items.value, (result, item) => {
+        const { allowed, id, name, quality } = item;
+
+        if (allowed && isAudioQualityItem(item) === audio) {
           if (id) {
             result.push({
               key: id,
@@ -94,12 +97,14 @@ function createFormatsSelector() {
 function createMapStateToProps() {
   return createSelector(
     createProviderSettingsSelector('qualityProfiles'),
-    createQualitiesSelector(),
+    createQualitiesSelector(false),
+    createQualitiesSelector(true),
     createFormatsSelector(),
     createProfileInUseSelector('qualityProfileId'),
-    (qualityProfile, qualities, customFormats, isInUse) => {
+    (qualityProfile, ebookQualities, audiobookQualities, customFormats, isInUse) => {
       return {
-        qualities,
+        ebookQualities,
+        audiobookQualities,
         customFormats,
         ...qualityProfile,
         isInUse
@@ -146,9 +151,22 @@ class EditQualityProfileModalContentConnector extends Component {
   // Control
 
   ensureCutoff = (qualityProfile) => {
-    const cutoff = qualityProfile.cutoff.value;
+    // Each format keeps its own cutoff, so each is checked against the qualities of that format.
+    this.ensureCutoffForFormat(qualityProfile, 'cutoff', false);
+    this.ensureCutoffForFormat(qualityProfile, 'audiobookCutoff', true);
+  };
 
-    const cutoffItem = _.find(qualityProfile.items.value, (i) => {
+  ensureCutoffForFormat = (qualityProfile, name, audio) => {
+    const field = qualityProfile[name];
+
+    if (!field) {
+      return;
+    }
+
+    const cutoff = field.value;
+    const candidates = _.filter(qualityProfile.items.value, (i) => i.allowed && isAudioQualityItem(i) === audio);
+
+    const cutoffItem = _.find(candidates, (i) => {
       if (!cutoff) {
         return false;
       }
@@ -157,15 +175,15 @@ class EditQualityProfileModalContentConnector extends Component {
     });
 
     // If the cutoff isn't allowed anymore or there isn't a cutoff set one
-    if (!cutoff || !cutoffItem || !cutoffItem.allowed) {
-      const firstAllowed = _.find(qualityProfile.items.value, { allowed: true });
-      let cutoffId = null;
+    if (!cutoffItem) {
+      const firstAllowed = candidates[0];
+      let cutoffId = audio ? 0 : null;
 
       if (firstAllowed) {
         cutoffId = firstAllowed.quality ? firstAllowed.quality.id : firstAllowed.id;
       }
 
-      this.props.setQualityProfileValue({ name: 'cutoff', value: cutoffId });
+      this.props.setQualityProfileValue({ name, value: cutoffId });
     }
   };
 

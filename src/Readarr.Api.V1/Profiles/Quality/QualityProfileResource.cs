@@ -12,6 +12,7 @@ namespace Readarr.Api.V1.Profiles.Quality
         public string Name { get; set; }
         public bool UpgradeAllowed { get; set; }
         public int Cutoff { get; set; }
+        public int AudiobookCutoff { get; set; }
         public List<QualityProfileQualityItemResource> Items { get; set; }
         public int MinFormatScore { get; set; }
         public int CutoffFormatScore { get; set; }
@@ -53,6 +54,7 @@ namespace Readarr.Api.V1.Profiles.Quality
                 Name = model.Name,
                 UpgradeAllowed = model.UpgradeAllowed,
                 Cutoff = model.Cutoff,
+                AudiobookCutoff = model.AudiobookCutoff,
                 Items = model.Items.ConvertAll(ToResource),
                 MinFormatScore = model.MinFormatScore,
                 CutoffFormatScore = model.CutoffFormatScore,
@@ -100,6 +102,7 @@ namespace Readarr.Api.V1.Profiles.Quality
                 Name = resource.Name,
                 UpgradeAllowed = resource.UpgradeAllowed,
                 Cutoff = resource.Cutoff,
+                AudiobookCutoff = resource.AudiobookCutoff,
                 Items = resource.Items.ConvertAll(ToModel),
                 MinFormatScore = resource.MinFormatScore,
                 CutoffFormatScore = resource.CutoffFormatScore,

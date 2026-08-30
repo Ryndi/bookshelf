@@ -62,8 +62,21 @@ namespace NzbDrone.Core.DecisionEngine.Specifications
             return ProfileComparisonResult.Upgrade;
         }
 
+        // An ebook and an audiobook of the same book are held side by side rather than replacing
+        // each other, so a file of one format never blocks a release of the other.
+        private static bool IsDifferentFormat(QualityModel left, QualityModel right)
+        {
+            return left?.Quality != null && right?.Quality != null &&
+                   Quality.IsAudio(left.Quality) != Quality.IsAudio(right.Quality);
+        }
+
         public bool IsUpgradable(QualityProfile qualityProfile, QualityModel currentQualities, List<CustomFormat> currentCustomFormats, QualityModel newQuality, List<CustomFormat> newCustomFormats)
         {
+            if (IsDifferentFormat(currentQualities, newQuality))
+            {
+                return true;
+            }
+
             var qualityUpgrade = IsQualityUpgradable(qualityProfile, currentQualities, newQuality);
 
             if (qualityUpgrade == ProfileComparisonResult.Upgrade)
@@ -96,7 +109,13 @@ namespace NzbDrone.Core.DecisionEngine.Specifications
 
         public bool QualityCutoffNotMet(QualityProfile profile, QualityModel currentQuality, QualityModel newQuality = null)
         {
-            var cutoff = profile.UpgradeAllowed ? profile.Cutoff : profile.FirstAllowedQuality().Id;
+            if (IsDifferentFormat(currentQuality, newQuality))
+            {
+                return true;
+            }
+
+            var isAudio = Quality.IsAudio(currentQuality.Quality);
+            var cutoff = profile.UpgradeAllowed ? profile.CutoffFor(currentQuality.Quality) : profile.FirstAllowedQuality(isAudio).Id;
             var cutoffCompare = new QualityModelComparer(profile).Compare(currentQuality.Quality.Id, cutoff);
 
             if (cutoffCompare < 0)
@@ -154,6 +173,11 @@ namespace NzbDrone.Core.DecisionEngine.Specifications
 
         public bool IsUpgradeAllowed(QualityProfile qualityProfile, QualityModel currentQuality, List<CustomFormat> currentCustomFormats, QualityModel newQuality, List<CustomFormat> newCustomFormats)
         {
+            if (IsDifferentFormat(currentQuality, newQuality))
+            {
+                return true;
+            }
+
             var isQualityUpgrade = IsQualityUpgradable(qualityProfile, currentQuality, newQuality);
             var isCustomFormatUpgrade = qualityProfile.CalculateCustomFormatScore(newCustomFormats) > qualityProfile.CalculateCustomFormatScore(currentCustomFormats);
 

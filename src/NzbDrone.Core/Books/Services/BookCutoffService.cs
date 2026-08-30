@@ -31,13 +31,24 @@ namespace NzbDrone.Core.Books
             //Get all items less than the cutoff
             foreach (var profile in profiles)
             {
-                var cutoff = profile.UpgradeAllowed ? profile.Cutoff : profile.FirstAllowedQuality().Id;
-                var cutoffIndex = profile.GetIndex(cutoff);
-                var belowCutoff = profile.Items.Take(cutoffIndex.Index).ToList();
+                var ids = new List<int>();
 
-                if (belowCutoff.Any())
+                // Each format has its own cutoff, so a quality only counts as below cutoff when
+                // it is below the cutoff set for its own format.
+                foreach (var isAudio in new[] { false, true })
                 {
-                    qualitiesBelowCutoff.Add(new QualitiesBelowCutoff(profile.Id, belowCutoff.SelectMany(i => i.GetQualities().Select(q => q.Id))));
+                    var cutoff = profile.UpgradeAllowed ? profile.CutoffFor(isAudio) : profile.FirstAllowedQuality(isAudio).Id;
+                    var cutoffIndex = profile.GetIndex(cutoff);
+
+                    ids.AddRange(profile.Items.Take(cutoffIndex.Index)
+                        .SelectMany(i => i.GetQualities())
+                        .Where(q => Quality.IsAudio(q) == isAudio)
+                        .Select(q => q.Id));
+                }
+
+                if (ids.Any())
+                {
+                    qualitiesBelowCutoff.Add(new QualitiesBelowCutoff(profile.Id, ids.Distinct()));
                 }
             }
 

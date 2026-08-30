@@ -68,6 +68,7 @@ class QualityProfile extends Component {
       name,
       upgradeAllowed,
       cutoff,
+      audiobookCutoff,
       items,
       isDeleting
     } = this.props;
@@ -99,7 +100,7 @@ class QualityProfile extends Component {
               }
 
               if (item.quality) {
-                const isCutoff = upgradeAllowed && item.quality.id === cutoff;
+                const isCutoff = upgradeAllowed && (item.quality.id === cutoff || item.quality.id === audiobookCutoff);
 
                 return (
                   <Label
@@ -112,7 +113,7 @@ class QualityProfile extends Component {
                 );
               }
 
-              const isCutoff = upgradeAllowed && item.id === cutoff;
+              const isCutoff = upgradeAllowed && (item.id === cutoff || item.id === audiobookCutoff);
 
               return (
                 <Tooltip
@@ -178,6 +179,7 @@ QualityProfile.propTypes = {
   name: PropTypes.string.isRequired,
   upgradeAllowed: PropTypes.bool.isRequired,
   cutoff: PropTypes.number.isRequired,
+  audiobookCutoff: PropTypes.number,
   items: PropTypes.arrayOf(PropTypes.object).isRequired,
   isDeleting: PropTypes.bool.isRequired,
   onConfirmDeleteQualityProfile: PropTypes.func.isRequired,

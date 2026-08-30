@@ -115,7 +115,25 @@ namespace NzbDrone.Core.Test.DecisionEngineTests
                 profile,
                 new List<QualityModel> { new QualityModel(Quality.Unknown, new Revision(version: 1)) },
                 new List<CustomFormat>(),
-                new QualityModel(Quality.MP3, new Revision(version: 2))).Should().BeFalse();
+                new QualityModel(Quality.AZW3, new Revision(version: 2))).Should().BeFalse();
+        }
+
+        [Test]
+        public void should_return_true_if_existing_file_is_a_different_format_to_the_release()
+        {
+            var profile = new QualityProfile
+            {
+                Cutoff = Quality.AZW3.Id,
+                Items = Qualities.QualityFixture.GetDefaultQualities(),
+                UpgradeAllowed = true
+            };
+
+            // An ebook that has met its own cutoff says nothing about an incoming audiobook.
+            Subject.CutoffNotMet(
+                profile,
+                new List<QualityModel> { new QualityModel(Quality.AZW3, new Revision(version: 1)) },
+                new List<CustomFormat>(),
+                new QualityModel(Quality.MP3, new Revision(version: 1))).Should().BeTrue();
         }
     }
 }
