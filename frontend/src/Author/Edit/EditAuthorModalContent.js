@@ -76,6 +76,9 @@ class EditAuthorModalContent extends Component {
       monitored,
       monitorNewItems,
       qualityProfileId,
+      audiobookQualityProfileId,
+      searchAudiobooks,
+      audiobookPath,
       metadataProfileId,
       path,
       tags
@@ -140,6 +143,55 @@ class EditAuthorModalContent extends Component {
                 onChange={onInputChange}
               />
             </FormGroup>
+
+            <FormGroup>
+              <FormLabel>
+                {translate('SearchAudiobooks')}
+              </FormLabel>
+
+              <FormInputGroup
+                type={inputTypes.CHECK}
+                name="searchAudiobooks"
+                helpText={translate('SearchAudiobooksHelpText')}
+                {...searchAudiobooks}
+                onChange={onInputChange}
+              />
+            </FormGroup>
+
+            {
+              searchAudiobooks.value &&
+                <FormGroup>
+                  <FormLabel>
+                    {translate('AudiobookQualityProfile')}
+                  </FormLabel>
+
+                  <FormInputGroup
+                    type={inputTypes.QUALITY_PROFILE_SELECT}
+                    name="audiobookQualityProfileId"
+                    helpText={translate('AudiobookQualityProfileHelpText')}
+                    {...audiobookQualityProfileId}
+                    onChange={onInputChange}
+                  />
+                </FormGroup>
+            }
+
+            {
+              searchAudiobooks.value &&
+                <FormGroup>
+                  <FormLabel>
+                    {translate('AudiobookPath')}
+                  </FormLabel>
+
+                  <FormInputGroup
+                    type={inputTypes.PATH}
+                    name="audiobookPath"
+                    helpText={translate('AudiobookPathHelpText')}
+                    includeFiles={false}
+                    {...audiobookPath}
+                    onChange={onInputChange}
+                  />
+                </FormGroup>
+            }
 
             {
               showMetadataProfile &&

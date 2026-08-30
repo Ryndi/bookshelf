@@ -38,6 +38,11 @@ namespace Readarr.Api.V1.Author
         //View & Edit
         public string Path { get; set; }
         public int QualityProfileId { get; set; }
+
+        // Audiobooks are judged by their own profile and stored in their own folder when set.
+        public int AudiobookQualityProfileId { get; set; }
+        public bool SearchAudiobooks { get; set; }
+        public string AudiobookPath { get; set; }
         public int MetadataProfileId { get; set; }
 
         //Editing Only
@@ -88,6 +93,9 @@ namespace Readarr.Api.V1.Author
 
                 Path = model.Path,
                 QualityProfileId = model.QualityProfileId,
+                AudiobookQualityProfileId = model.AudiobookQualityProfileId,
+                SearchAudiobooks = model.SearchAudiobooks,
+                AudiobookPath = model.AudiobookPath,
                 MetadataProfileId = model.MetadataProfileId,
                 Links = model.Metadata.Value.Links,
 
@@ -140,6 +148,9 @@ namespace Readarr.Api.V1.Author
                 //AlternateTitles
                 Path = resource.Path,
                 QualityProfileId = resource.QualityProfileId,
+                AudiobookQualityProfileId = resource.AudiobookQualityProfileId,
+                SearchAudiobooks = resource.SearchAudiobooks,
+                AudiobookPath = resource.AudiobookPath,
                 MetadataProfileId = resource.MetadataProfileId,
 
                 Monitored = resource.Monitored,

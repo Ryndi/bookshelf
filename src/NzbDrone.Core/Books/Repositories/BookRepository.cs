@@ -105,17 +105,35 @@ namespace NzbDrone.Core.Books
             return Query(s => s.TitleSlug == titleSlug).SingleOrDefault();
         }
 
-        //x.Id == null is converted to SQL, so warning incorrect
-#pragma warning disable CS0472
         private SqlBuilder BooksWithoutFilesBuilder(DateTime currentTime) => Builder()
             .Join<Book, Author>((l, r) => l.AuthorMetadataId == r.AuthorMetadataId)
             .Join<Author, AuthorMetadata>((l, r) => l.AuthorMetadataId == r.Id)
             .Join<Book, Edition>((b, e) => b.Id == e.BookId)
-            .LeftJoin<Edition, BookFile>((t, f) => t.Id == f.EditionId)
-            .Where<BookFile>(f => f.Id == null)
             .Where<Edition>(e => e.Monitored == true)
-            .Where<Book>(a => a.ReleaseDate <= currentTime);
-#pragma warning restore CS0472
+            .Where<Book>(a => a.ReleaseDate <= currentTime)
+            .Where(BuildMissingFormatWhereClause());
+
+        // A book is wanted while it is missing an ebook, or - when audiobooks are switched on for
+        // it - while it is missing an audiobook. Owning one format no longer satisfies the other.
+        private string BuildMissingFormatWhereClause()
+        {
+            var isTrue = _database.DatabaseType == DatabaseType.PostgreSQL ? "true" : "1";
+            var wantsAudiobooks = $"COALESCE(\"Books\".\"SearchAudiobooks\", \"Authors\".\"SearchAudiobooks\") = {isTrue}";
+
+            return $"(NOT EXISTS {HasFileOfFormatSubquery(false)} OR ({wantsAudiobooks} AND NOT EXISTS {HasFileOfFormatSubquery(true)}))";
+        }
+
+        private string HasFileOfFormatSubquery(bool audio)
+        {
+            var qualityMatch = string.Join(
+                " OR ",
+                Quality.All.Where(q => Quality.IsAudio(q) == audio)
+                    .Select(q => $"\"BookFiles\".\"Quality\" LIKE '%_quality_: {q.Id},%'"));
+
+            return "(SELECT 1 FROM \"BookFiles\" " +
+                   "JOIN \"Editions\" AS \"FormatEditions\" ON \"BookFiles\".\"EditionId\" = \"FormatEditions\".\"Id\" " +
+                   $"WHERE \"FormatEditions\".\"BookId\" = \"Books\".\"Id\" AND ({qualityMatch}))";
+        }
 
         public PagingSpec<Book> BooksWithoutFiles(PagingSpec<Book> pagingSpec)
         {

@@ -29,6 +29,20 @@ class EditBookModalContent extends Component {
 
   };
 
+  // The select carries strings, but the field is a nullable bool where null means
+  // "inherit from the author".
+  onSearchAudiobooksChange = ({ name, value }) => {
+    let converted = null;
+
+    if (value === 'true') {
+      converted = true;
+    } else if (value === 'false') {
+      converted = false;
+    }
+
+    this.props.onInputChange({ name, value: converted });
+  };
+
   //
   // Render
 
@@ -50,8 +64,13 @@ class EditBookModalContent extends Component {
     const {
       monitored,
       anyEditionOk,
+      searchAudiobooks,
       editions
     } = item;
+
+    const searchAudiobooksValue = searchAudiobooks && searchAudiobooks.value != null
+      ? String(searchAudiobooks.value)
+      : '';
 
     const hasFile = statistics ? statistics.bookFileCount > 0 : false;
     const errorMessage = getErrorMessage(error, 'Unable to load editions');
@@ -96,6 +115,25 @@ class EditBookModalContent extends Component {
                 helpText={translate('AnyEditionOkHelpText')}
                 {...anyEditionOk}
                 onChange={onInputChange}
+              />
+            </FormGroup>
+
+            <FormGroup>
+              <FormLabel>
+                {translate('SearchAudiobooks')}
+              </FormLabel>
+
+              <FormInputGroup
+                type={inputTypes.SELECT}
+                name="searchAudiobooks"
+                helpText={translate('BookSearchAudiobooksHelpText')}
+                value={searchAudiobooksValue}
+                values={[
+                  { key: '', value: translate('DefaultFromAuthor') },
+                  { key: 'true', value: translate('Yes') },
+                  { key: 'false', value: translate('No') }
+                ]}
+                onChange={this.onSearchAudiobooksChange}
               />
             </FormGroup>
 
