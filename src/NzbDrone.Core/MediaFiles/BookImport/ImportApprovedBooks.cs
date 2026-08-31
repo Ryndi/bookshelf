@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NLog;
+using NzbDrone.Common;
 using NzbDrone.Common.Disk;
 using NzbDrone.Common.Extensions;
 using NzbDrone.Common.Instrumentation.Extensions;
@@ -305,6 +306,24 @@ namespace NzbDrone.Core.MediaFiles.BookImport
                     _logger.Warn(e, "Couldn't import book " + localTrack);
                     importResults.Add(new ImportResult(importDecision, "Failed to import book."));
                 }
+            }
+
+            // BookFiles.Path is unique and the batch goes in as one insert, so a single file that
+            // is already recorded takes every other row down with it - a scan that re-offers known
+            // files would otherwise lose the rows for the new ones alongside them.
+            var recorded = filesToAdd.Any()
+                ? _mediaFileService.GetFileWithPath(filesToAdd.Select(f => f.Path).ToList())
+                : null;
+
+            var alreadyRecorded = (recorded ?? new List<BookFile>())
+                .Select(f => f.Path)
+                .ToHashSet(PathEqualityComparer.Instance);
+
+            if (alreadyRecorded.Any())
+            {
+                var skipped = filesToAdd.Where(f => alreadyRecorded.Contains(f.Path)).ToList();
+                _logger.Debug("Skipping {0} file(s) already in the database: {1}", skipped.Count, skipped.Select(f => f.Path).ConcatToString());
+                filesToAdd = filesToAdd.Where(f => !alreadyRecorded.Contains(f.Path)).ToList();
             }
 
             var watch = new System.Diagnostics.Stopwatch();

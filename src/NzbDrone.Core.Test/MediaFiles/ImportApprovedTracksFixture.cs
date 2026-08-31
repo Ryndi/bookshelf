@@ -260,5 +260,28 @@ namespace NzbDrone.Core.Test.MediaFiles
             Mocker.GetMock<IMediaFileService>()
                 .Verify(v => v.Delete(It.IsAny<BookFile>(), DeleteMediaFileReason.ManualOverride), Times.Once());
         }
+
+        [Test]
+        public void should_not_lose_the_batch_when_one_file_is_already_recorded()
+        {
+            var decisions = _approvedDecisions.Take(3).ToList();
+            var duplicate = decisions.First().Item.Path;
+
+            // BookFiles.Path is unique, so this row would abort the whole insert.
+            Mocker.GetMock<IMediaFileService>()
+                .Setup(s => s.GetFileWithPath(It.IsAny<List<string>>()))
+                .Returns(new List<BookFile> { new BookFile { Path = duplicate } });
+
+            List<BookFile> added = null;
+            Mocker.GetMock<IMediaFileService>()
+                .Setup(s => s.AddMany(It.IsAny<List<BookFile>>()))
+                .Callback<List<BookFile>>(f => added = f);
+
+            Subject.Import(decisions, false);
+
+            added.Should().NotBeNull();
+            added.Should().NotContain(f => f.Path == duplicate);
+            added.Should().HaveCount(decisions.Count - 1);
+        }
     }
 }
