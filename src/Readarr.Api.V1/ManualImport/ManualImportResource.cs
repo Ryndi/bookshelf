@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NzbDrone.Core.Books;
 using NzbDrone.Core.DecisionEngine;
+using NzbDrone.Core.MediaFiles;
 using NzbDrone.Core.MediaFiles.BookImport.Manual;
 using NzbDrone.Core.Parser.Model;
 using NzbDrone.Core.Qualities;
@@ -48,7 +49,11 @@ namespace Readarr.Api.V1.ManualImport
                 Size = model.Size,
                 Author = model.Author.ToResource(),
                 Book = model.Book.ToResource(),
-                ForeignEditionId = model.Edition?.ForeignEditionId ?? model.Book?.Editions.Value.PrimaryMonitored()?.ForeignEditionId,
+
+                // Falls back to the monitored edition of the file's own format - picking the
+                // primary here would file an audiobook against the ebook edition.
+                ForeignEditionId = model.Edition?.ForeignEditionId ??
+                                   model.Book?.Editions.Value.MonitoredForFormat(MediaFileExtensions.IsAudioFile(model.Path))?.ForeignEditionId,
                 Quality = model.Quality,
                 ReleaseGroup = model.ReleaseGroup,
 
