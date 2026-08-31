@@ -54,11 +54,19 @@ namespace NzbDrone.Core.MediaFiles
             var isAudio = MediaFileExtensions.IsAudioFile(bookFile.Path);
             var existingFiles = allFiles.Where(f => MediaFileExtensions.IsAudioFile(f.Path) == isAudio).ToList();
 
-            var rootFolderPath = _diskProvider.GetParentFolder(localBook.Author.Path);
+            // The files being replaced sit under the audiobook folder when that is where this
+            // format lives, so the root has to be the one actually holding them. The recycle bin
+            // path is worked out relative to it, and the ebook root cannot answer for a file kept
+            // somewhere else entirely.
+            var authorPath = localBook.Author.PathForExtension(bookFile.Path);
+            var rootFolderPath = _diskProvider.GetParentFolder(authorPath);
             var rootFolder = _rootFolderService.GetBestRootFolder(rootFolderPath);
-            var isCalibre = rootFolder.IsCalibreLibrary && rootFolder.CalibreSettings != null;
 
-            var settings = rootFolder.CalibreSettings;
+            // An audiobook folder that was never added as a root folder of its own has no root to
+            // find, and nothing to say about Calibre.
+            var isCalibre = rootFolder != null && rootFolder.IsCalibreLibrary && rootFolder.CalibreSettings != null;
+
+            var settings = rootFolder?.CalibreSettings;
 
             // Calibre keeps every format under a single book, so keep the link even when the only
             // files we have for this book are of the other type.

@@ -188,6 +188,54 @@ namespace NzbDrone.Core.Test.MediaFiles
         }
 
         [Test]
+        public void should_replace_an_audiobook_kept_under_its_own_root()
+        {
+            // The author's audiobooks live under a different root to the ebooks, so the file being
+            // replaced is not below the author's ebook folder at all.
+            var audiobookPath = @"C:\Test\Audiobooks\Author".AsOsAgnostic();
+
+            _localTrack.Author.AudiobookPath = audiobookPath;
+            _localTrack.Book = Builder<Book>.CreateNew()
+                .With(e => e.BookFiles = new LazyLoaded<List<BookFile>>(
+                          new List<BookFile>
+                          {
+                              new BookFile { Id = 1, Path = Path.Combine(audiobookPath, "book.m4b") }
+                          }))
+                .Build();
+
+            _trackFile.Path = Path.Combine(audiobookPath, "book.m4b");
+
+            var oldFiles = Subject.UpgradeBookFile(_trackFile, _localTrack).OldFiles;
+
+            oldFiles.Should().HaveCount(1);
+            Mocker.GetMock<IRecycleBinProvider>().Verify(v => v.DeleteFile(It.IsAny<string>(), It.IsAny<string>()), Times.Once());
+        }
+
+        [Test]
+        public void should_not_throw_when_the_audiobook_folder_is_not_a_root_folder()
+        {
+            var audiobookPath = @"C:\Test\Audiobooks\Author".AsOsAgnostic();
+
+            _localTrack.Author.AudiobookPath = audiobookPath;
+            _localTrack.Book = Builder<Book>.CreateNew()
+                .With(e => e.BookFiles = new LazyLoaded<List<BookFile>>(
+                          new List<BookFile>
+                          {
+                              new BookFile { Id = 1, Path = Path.Combine(audiobookPath, "book.m4b") }
+                          }))
+                .Build();
+
+            _trackFile.Path = Path.Combine(audiobookPath, "book.m4b");
+
+            // Nothing was ever added as a root folder covering the audiobook path.
+            Mocker.GetMock<IRootFolderService>()
+                .Setup(c => c.GetBestRootFolder(It.IsAny<string>()))
+                .Returns((RootFolder)null);
+
+            Subject.UpgradeBookFile(_trackFile, _localTrack).OldFiles.Should().HaveCount(1);
+        }
+
+        [Test]
         [Ignore("Pending readarr fix")]
         public void should_import_if_existing_file_doesnt_exist_in_db()
         {
