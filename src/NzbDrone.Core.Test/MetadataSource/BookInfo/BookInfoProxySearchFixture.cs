@@ -12,10 +12,14 @@ using NzbDrone.Core.MetadataSource.Goodreads;
 using NzbDrone.Core.Profiles.Metadata;
 using NzbDrone.Core.Test.Framework;
 using NzbDrone.Test.Common;
+using NzbDrone.Test.Common.Categories;
 
 namespace NzbDrone.Core.Test.MetadataSource.Goodreads
 {
+    // These call the live metadata API, so they fail whenever it is unreachable or its results
+    // drift. That is not something a build of this repository should depend on.
     [TestFixture]
+    [IntegrationTest]
     public class BookInfoProxySearchFixture : CoreTest<BookInfoProxy>
     {
         [SetUp]
