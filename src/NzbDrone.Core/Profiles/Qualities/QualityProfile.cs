@@ -57,6 +57,13 @@ namespace NzbDrone.Core.Profiles.Qualities
                 return AudiobookCutoff;
             }
 
+            // A profile that allows nothing has no quality to fall back to. That is the schema a
+            // new profile starts from, so report the stored value rather than throwing.
+            if (!Items.Any(q => q.Allowed))
+            {
+                return AudiobookCutoff;
+            }
+
             return FirstAllowedQuality(true).Id;
         }
 

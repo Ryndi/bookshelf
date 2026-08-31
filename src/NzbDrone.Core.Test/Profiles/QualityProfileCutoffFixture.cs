@@ -50,5 +50,20 @@ namespace NzbDrone.Core.Test.Profiles
 
             profile.CutoffFor(Quality.MP3).Should().Be(Quality.MP3.Id);
         }
+
+        [Test]
+        public void should_not_throw_when_the_profile_allows_nothing()
+        {
+            // The schema a new profile starts from allows nothing yet, and the API asks it for
+            // its audiobook cutoff while building the response.
+            var profile = GivenProfile(0);
+
+            foreach (var item in profile.Items)
+            {
+                item.Allowed = false;
+            }
+
+            profile.CutoffFor(true).Should().Be(0);
+        }
     }
 }
