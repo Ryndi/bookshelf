@@ -1,5 +1,6 @@
 using System;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Diacritical;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -49,6 +50,15 @@ namespace Readarr.Http.Authentication
                     options.ExpireTimeSpan = TimeSpan.FromDays(7);
                     options.SlidingExpiration = true;
                     options.ReturnUrlParameter = "returnUrl";
+
+                    // The framework's own handler answers 401 here rather than redirecting, which
+                    // leaves the browser sitting on an empty error instead of the login page. The
+                    // only thing behind this scheme is the UI, so send it to the login page.
+                    options.Events.OnRedirectToLogin = context =>
+                    {
+                        context.Response.Redirect(context.RedirectUri);
+                        return Task.CompletedTask;
+                    };
                 });
 
             return services.AddAuthentication()
