@@ -40,6 +40,13 @@ export const defaultState = {
         isVisible: true
       },
       {
+        // Worked out from the book's own statistics, so there is nothing to sort on.
+        name: 'format',
+        label: 'Format',
+        isSortable: false,
+        isVisible: true
+      },
+      {
         name: 'releaseDate',
         label: 'Release Date',
         isSortable: true,

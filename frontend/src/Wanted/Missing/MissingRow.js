@@ -4,10 +4,36 @@ import AuthorNameLink from 'Author/AuthorNameLink';
 import bookEntities from 'Book/bookEntities';
 import BookSearchCellConnector from 'Book/BookSearchCellConnector';
 import BookTitleLink from 'Book/BookTitleLink';
+import Label from 'Components/Label';
 import RelativeDateCellConnector from 'Components/Table/Cells/RelativeDateCellConnector';
 import TableRowCell from 'Components/Table/Cells/TableRowCell';
 import TableSelectCell from 'Components/Table/Cells/TableSelectCell';
 import TableRow from 'Components/Table/TableRow';
+import { kinds } from 'Helpers/Props';
+import translate from 'Utilities/String/translate';
+import styles from './MissingRow.css';
+
+// A book lands here for missing an ebook, or a missing audiobook when it wants one, or both.
+// The row otherwise says only that something is missing, not which.
+function missingFormats(statistics) {
+  const {
+    availableEbookCount = 0,
+    audiobookCount = 0,
+    availableAudiobookCount = 0
+  } = statistics || {};
+
+  const formats = [];
+
+  if (!availableEbookCount) {
+    formats.push(translate('Ebook'));
+  }
+
+  if (audiobookCount > 0 && !availableAudiobookCount) {
+    formats.push(translate('Audiobook'));
+  }
+
+  return formats;
+}
 
 function MissingRow(props) {
   const {
@@ -18,6 +44,7 @@ function MissingRow(props) {
     title,
     lastSearchTime,
     disambiguation,
+    statistics,
     isSelected,
     columns,
     onSelectedChange
@@ -69,6 +96,26 @@ function MissingRow(props) {
             );
           }
 
+          if (name === 'format') {
+            return (
+              <TableRowCell key={name}>
+                {
+                  missingFormats(statistics).map((format) => {
+                    return (
+                      <Label
+                        key={format}
+                        className={styles.format}
+                        kind={kinds.DANGER}
+                      >
+                        {format}
+                      </Label>
+                    );
+                  })
+                }
+              </TableRowCell>
+            );
+          }
+
           if (name === 'releaseDate') {
             return (
               <RelativeDateCellConnector
@@ -116,6 +163,7 @@ MissingRow.propTypes = {
   title: PropTypes.string.isRequired,
   lastSearchTime: PropTypes.string,
   disambiguation: PropTypes.string,
+  statistics: PropTypes.object,
   isSelected: PropTypes.bool,
   columns: PropTypes.arrayOf(PropTypes.object).isRequired,
   onSelectedChange: PropTypes.func.isRequired

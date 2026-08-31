@@ -108,10 +108,20 @@ namespace NzbDrone.Core.Books
         private SqlBuilder BooksWithoutFilesBuilder(DateTime currentTime) => Builder()
             .Join<Book, Author>((l, r) => l.AuthorMetadataId == r.AuthorMetadataId)
             .Join<Author, AuthorMetadata>((l, r) => l.AuthorMetadataId == r.Id)
-            .Join<Book, Edition>((b, e) => b.Id == e.BookId)
-            .Where<Edition>(e => e.Monitored == true)
+            .Where(HasMonitoredEditionClause())
             .Where<Book>(a => a.ReleaseDate <= currentTime)
             .Where(BuildMissingFormatWhereClause());
+
+        // Joining Editions to require a monitored one returns the book once per monitored
+        // edition, and a book tracking an ebook and an audiobook has two of them, so it appeared
+        // twice while the total counted it once. EXISTS asks the same thing without the join
+        // multiplying the rows.
+        private string HasMonitoredEditionClause()
+        {
+            var isTrue = _database.DatabaseType == DatabaseType.PostgreSQL ? "true" : "1";
+
+            return $"EXISTS (SELECT 1 FROM \"Editions\" WHERE \"Editions\".\"BookId\" = \"Books\".\"Id\" AND \"Editions\".\"Monitored\" = {isTrue})";
+        }
 
         // A book is wanted while it is missing an ebook, or - when audiobooks are switched on for
         // it - while it is missing an audiobook. Owning one format no longer satisfies the other.
