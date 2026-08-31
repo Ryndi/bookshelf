@@ -14,7 +14,8 @@ function createMapStateToProps() {
     (state, { includeMissingValue }) => includeMissingValue,
     (state, { includeNoChange }) => includeNoChange,
     (state, { includeNoChangeDisabled }) => includeNoChangeDisabled,
-    (rootFolders, value, includeMissingValue, includeNoChange, includeNoChangeDisabled = true) => {
+    (state, { includeNone }) => includeNone,
+    (rootFolders, value, includeMissingValue, includeNoChange, includeNoChangeDisabled = true, includeNone = false) => {
       const values = rootFolders.items.map((rootFolder) => {
         return {
           key: rootFolder.path,
@@ -24,6 +25,16 @@ function createMapStateToProps() {
           isMissing: false
         };
       });
+
+      // For an optional root folder, empty is a real choice rather than "not filled in yet",
+      // so it gets an entry of its own and the auto-select below is skipped.
+      if (includeNone) {
+        values.unshift({
+          key: '',
+          value: translate('None'),
+          isMissing: false
+        });
+      }
 
       if (includeNoChange) {
         values.unshift({
@@ -88,8 +99,13 @@ class RootFolderSelectInputConnector extends Component {
       name,
       value,
       values,
+      includeNone,
       onChange
     } = this.props;
+
+    if (includeNone) {
+      return;
+    }
 
     if (!value || !values.some((v) => v.key === value) || value === ADD_NEW_KEY) {
       const defaultValue = values[0];
@@ -107,10 +123,11 @@ class RootFolderSelectInputConnector extends Component {
       name,
       value,
       values,
+      includeNone,
       onChange
     } = this.props;
 
-    if (prevProps.values === values) {
+    if (includeNone || prevProps.values === values) {
       return;
     }
 
@@ -145,11 +162,13 @@ RootFolderSelectInputConnector.propTypes = {
   value: PropTypes.string,
   values: PropTypes.arrayOf(PropTypes.object).isRequired,
   includeNoChange: PropTypes.bool.isRequired,
+  includeNone: PropTypes.bool.isRequired,
   onChange: PropTypes.func.isRequired
 };
 
 RootFolderSelectInputConnector.defaultProps = {
-  includeNoChange: false
+  includeNoChange: false,
+  includeNone: false
 };
 
 export default connect(createMapStateToProps)(RootFolderSelectInputConnector);

@@ -182,6 +182,7 @@ class AddAuthorOptionsForm extends Component {
                 type={inputTypes.ROOT_FOLDER_SELECT}
                 name="audiobookRootFolderPath"
                 helpText={translate('AudiobookRootFolderHelpText')}
+                includeNone={true}
                 {...audiobookRootFolderPath}
                 onChange={onInputChange}
               />

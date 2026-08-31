@@ -4,6 +4,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { createSelector } from 'reselect';
 import { saveAuthor, setAuthorValue } from 'Store/Actions/authorActions';
+import { fetchRootFolders } from 'Store/Actions/Settings/rootFolders';
 import createAuthorSelector from 'Store/Selectors/createAuthorSelector';
 import selectSettings from 'Store/Selectors/selectSettings';
 import EditAuthorModalContent from './EditAuthorModalContent';
@@ -67,13 +68,20 @@ function createMapStateToProps() {
 
 const mapDispatchToProps = {
   dispatchSetAuthorValue: setAuthorValue,
-  dispatchSaveAuthor: saveAuthor
+  dispatchSaveAuthor: saveAuthor,
+  dispatchFetchRootFolders: fetchRootFolders
 };
 
 class EditAuthorModalContentConnector extends Component {
 
   //
   // Lifecycle
+
+  // This dialog had no root folder field until the audiobook one was added, so nothing here
+  // had ever loaded them and the picker came up empty.
+  componentDidMount() {
+    this.props.dispatchFetchRootFolders();
+  }
 
   componentDidUpdate(prevProps, prevState) {
     if (prevProps.isSaving && !this.props.isSaving && !this.props.saveError) {
@@ -116,6 +124,7 @@ EditAuthorModalContentConnector.propTypes = {
   saveError: PropTypes.object,
   dispatchSetAuthorValue: PropTypes.func.isRequired,
   dispatchSaveAuthor: PropTypes.func.isRequired,
+  dispatchFetchRootFolders: PropTypes.func.isRequired,
   onModalClose: PropTypes.func.isRequired
 };
 
