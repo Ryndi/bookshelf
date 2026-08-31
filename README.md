@@ -1,47 +1,73 @@
 # bookshelf
 
-This fork merges [Bookshelf pull requests](https://github.com/pennydreadful/bookshelf/pulls)
-as Bookshelf has seemingly been abandoned.  As long as Bookshelf remains inactive this fork
-will continue to merge new pull requests.  If Bookshelf is ever updated and remains active
-this fork will defer to Bookshelf.
+A fork of [klein1jo/bookshelf](https://github.com/klein1jo/bookshelf) that adds support for
+keeping **both an ebook and an audiobook** of the same book, rather than having to choose one.
 
-This repository is forked from Bookshelf commit c21c413, which was the latest at the time,
-and merges the following open pull requests:
+Upstream, a book can only ever track a single edition, and acquiring one format replaces the
+other on disk. This fork changes that.
 
-    - #171 Hardcover import from any username and reading status
-    - #163 feat(QBittorrent): port API-key auth from Radarr/Sonarr
-    - #162 fix(QBittorrentProxyV2): accept empty body as auth success (qBit >= 4.5)
-    - #161 fix(AudioTag): null-safe Diff() for OriginalReleaseDate
-    - #159 Corrected issue with updating book edition. (#96)
-    - #154 Add .NET Windows installer with safe upgrade and auto-rollback
-    - #151 Paginate large Goodreads series
-    - #149 Cleanse database connection string when logging
-    - #119 Update name_map.json
+## Lineage
 
-Open pull requests not merged:
+    Readarr/Readarr              abandoned
+      └─ pennydreadful/bookshelf abandoned
+           └─ klein1jo/bookshelf merges open Bookshelf pull requests
+                └─ this fork     adds ebook + audiobook support
 
-    - #170 - Duplicate of pull request #162 - Fix qBittorrent 5.2.0 authentication failure (HTTP 204 on login)
-    - #158 - Duplicate of pull request #162 - Fix qBittorrent V2 auth check breaking against qBit 5.2.0+ (empty 204 response)
-    - #132 - Failed status checks - Add configurable UI setting for import match threshold
-    - #128 - Integrated by pull request #171 - Add Hardcover reading status import support
-    - #123 - Integrated by pull request #171 - Change Hardcover Lists to be from any user by username
+Everything klein1jo merges is carried here — the Hardcover import, the qBittorrent auth fixes,
+the .NET Windows installer and the rest. Their updates are pulled in periodically.
 
-## Getting Started
+## Ebook and audiobook side by side
 
-This fork is a direct drop-in replacement for your current Bookshelf installation.  The following are
-provided as examples only and may differ from your installation.
+- A book keeps **one monitored edition per format**, so an ebook and an audiobook can be tracked
+  at the same time.
+- Quality is judged **per format**, with its own cutoff for each. Owning an audiobook no longer
+  makes every ebook look like a downgrade.
+- A book stays **wanted** while either format is missing, so acquiring the ebook does not stop
+  the audiobook being searched for.
+- Importing one format **never replaces** the other on disk.
+- Searches fan out per monitored edition, so an audiobook titled differently to the ebook is
+  still found.
 
-If you were previously using [Goodreads](https://www.goodreads.com) as your metadata provider:
+### Setting it up
 
-    docker run -p 8787:8787 -v ~/.config/bookshelf:/config ghcr.io/klein1jo/bookshelf:softcover
+Per author, under **Edit**:
 
-If you were previously using [Hardcover](https://hardcover.app/home) as a metadata provider:
+| Setting | |
+|---|---|
+| **Search Audiobooks** | Turn it on to want an audiobook alongside the ebook |
+| **Audiobook Quality Profile** | Which profile judges audiobook releases — typically one allowing MP3/M4B/FLAC |
+| **Audiobook Root Folder** | Where audiobooks are stored. The author folder is created under it using your usual naming |
 
-    docker run -p 8787:8787 -v ~/.config/bookshelf:/config ghcr.io/klein1jo/bookshelf:hardcover
+The same three settings are available when adding an author and in the bulk author editor. Each
+book has a **Search Audiobooks** override that inherits from its author unless you set it.
+
+Quality profiles gain a separate **Upgrade Audiobook Until** cutoff alongside the ebook one, and
+the History, Search and Files tabs on a book have an **All / Ebook / Audiobook** filter.
+
+## Getting started
+
+Drop-in replacement for an existing Bookshelf or klein1jo/bookshelf install.
+
+Goodreads-derived metadata:
+
+    docker run -p 8787:8787 -v ~/.config/bookshelf:/config ghcr.io/ryndi/bookshelf:softcover
+
+[Hardcover](https://hardcover.app/home) metadata:
+
+    docker run -p 8787:8787 -v ~/.config/bookshelf:/config ghcr.io/ryndi/bookshelf:hardcover
+
+### Back up your config first
+
+This applies database migrations **41 through 44**, and they are one-way — there is no
+downgrade path. Once they have run, going back to another build means restoring your config
+directory from a backup.
+
+    cp -a ~/.config/bookshelf ~/.config/bookshelf-backup
 
 ## Support
 
-I offer no support.  Issues and pull requests have been disabled on this repository.  If you have
-an issue or wish to submit a pull request please do so to [Bookshelf](https://github.com/pennydreadful/bookshelf)
-so that they are captured in the upstream.
+None offered, and this is not affiliated with Readarr, Bookshelf or klein1jo. Issues are open
+for problems with the audiobook support specifically.
 
+Anything wrong with the underlying application belongs upstream at
+[Bookshelf](https://github.com/pennydreadful/bookshelf), so it is captured where it originated.
