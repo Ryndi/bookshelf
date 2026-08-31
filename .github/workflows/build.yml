@@ -4,8 +4,8 @@ permissions:
   contents: read
   packages: write
 
-  # dorny/test-reporter publishes a check run, which needs this. Without it the step fails
-  # even when the tests themselves passed.
+  # dorny/test-reporter defaults to writing the run summary rather than a check run, but it
+  # still needs this for the check-run path it falls back on.
   checks: write
 
 on:
@@ -98,6 +98,16 @@ jobs:
       - name: Test
         shell: bash
         run: ./test.sh Linux Unit Test
+
+      # test-reporter writes to the run summary, which needs a sign-in to read, and the
+      # logs age out. Keeping the raw results makes a failure diagnosable afterwards.
+      - name: Upload test results
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: unit-test-results
+          path: "**/TestResult.xml"
+          if-no-files-found: error
 
       - name: Report test results
         uses: dorny/test-reporter@v3
