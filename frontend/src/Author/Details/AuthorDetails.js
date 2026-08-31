@@ -5,6 +5,7 @@ import DeleteAuthorModal from 'Author/Delete/DeleteAuthorModal';
 import EditAuthorModalConnector from 'Author/Edit/EditAuthorModalConnector';
 import AuthorHistoryTable from 'Author/History/AuthorHistoryTable';
 import MonitoringOptionsModal from 'Author/MonitoringOptions/MonitoringOptionsModal';
+import BookFormatFilter, { ALL } from 'Book/BookFormatFilter';
 import BookEditorFooter from 'Book/Editor/BookEditorFooter';
 import BookFileEditorTable from 'BookFile/Editor/BookFileEditorTable';
 import Alert from 'Components/Alert';
@@ -64,7 +65,8 @@ class AuthorDetails extends Component {
       allUnselected: false,
       lastToggled: null,
       selectedState: {},
-      selectedTabIndex: 0
+      selectedTabIndex: 0,
+      formatFilter: ALL
     };
   }
 
@@ -212,6 +214,11 @@ class AuthorDetails extends Component {
     this.setState({ selectedTabIndex: index });
   };
 
+  // Shared across the tabs so switching between them keeps the chosen format.
+  onFormatFilterChange = (formatFilter) => {
+    this.setState({ formatFilter });
+  };
+
   //
   // Render
 
@@ -261,7 +268,8 @@ class AuthorDetails extends Component {
       allExpanded,
       allCollapsed,
       expandedState,
-      selectedTabIndex
+      selectedTabIndex,
+      formatFilter
     } = this.state;
 
     let expandIcon = icons.EXPAND_INDETERMINATE;
@@ -519,21 +527,36 @@ class AuthorDetails extends Component {
                   </TabPanel>
 
                   <TabPanel>
+                    <BookFormatFilter
+                      value={formatFilter}
+                      onChange={this.onFormatFilterChange}
+                    />
                     <AuthorHistoryTable
                       authorId={id}
+                      formatFilter={formatFilter}
                     />
                   </TabPanel>
 
                   <TabPanel>
+                    <BookFormatFilter
+                      value={formatFilter}
+                      onChange={this.onFormatFilterChange}
+                    />
                     <InteractiveSearchTable
                       type="author"
                       authorId={id}
+                      formatFilter={formatFilter}
                     />
                   </TabPanel>
 
                   <TabPanel>
+                    <BookFormatFilter
+                      value={formatFilter}
+                      onChange={this.onFormatFilterChange}
+                    />
                     <BookFileEditorTable
                       authorId={id}
+                      formatFilter={formatFilter}
                     />
                   </TabPanel>
                 </Tabs>
