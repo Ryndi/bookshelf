@@ -6,7 +6,6 @@ import { connect } from 'react-redux';
 import { createSelector } from 'reselect';
 import { deleteBookFile, deleteBookFiles, setBookFilesSort, updateBookFiles } from 'Store/Actions/bookFileActions';
 import { fetchQualityProfileSchema } from 'Store/Actions/settingsActions';
-import createAuthorSelector from 'Store/Selectors/createAuthorSelector';
 import createClientSideCollectionSelector from 'Store/Selectors/createClientSideCollectionSelector';
 import filterByBookFormat from 'Utilities/Quality/filterByBookFormat';
 import getQualities from 'Utilities/Quality/getQualities';
@@ -36,28 +35,35 @@ function createSchemaSelector() {
 
 function createMapStateToProps() {
   return createSelector(
+    (state, { authorId }) => authorId,
     (state, { bookId }) => bookId,
     (state, { formatFilter }) => formatFilter,
     createClientSideCollectionSelector('bookFiles'),
     createSchemaSelector(),
-    createAuthorSelector(),
     (
+      authorId,
       bookId,
       formatFilter,
       bookFiles,
-      schema,
-      author
+      schema
     ) => {
       const {
         items,
         ...otherProps
       } = bookFiles;
 
+      // The store is shared and the server broadcasts every imported file to every client, so
+      // an import for an unrelated author lands here too. Without this the file shows up in
+      // whichever list happens to be open and only goes away on the next refresh.
+      const scoped = items.filter((file) => {
+        return bookId == null ? file.authorId === authorId : file.bookId === bookId;
+      });
+
       // Filtered here rather than at render so selection, select-all and delete only ever
       // act on the rows actually on screen.
       return {
         ...schema,
-        items: filterByBookFormat(items, formatFilter),
+        items: filterByBookFormat(scoped, formatFilter),
         ...otherProps,
         isDeleting: bookFiles.isDeleting,
         isSaving: bookFiles.isSaving
