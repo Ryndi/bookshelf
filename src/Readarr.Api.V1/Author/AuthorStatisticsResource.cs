@@ -8,6 +8,9 @@ namespace Readarr.Api.V1.Author
         public int BookCount { get; set; }
         public int AvailableBookCount { get; set; }
         public int TotalBookCount { get; set; }
+        public int AvailableEbookCount { get; set; }
+        public int AudiobookCount { get; set; }
+        public int AvailableAudiobookCount { get; set; }
         public long SizeOnDisk { get; set; }
 
         public decimal PercentOfBooks
@@ -39,6 +42,9 @@ namespace Readarr.Api.V1.Author
                 BookCount = model.BookCount,
                 AvailableBookCount = model.AvailableBookCount,
                 TotalBookCount = model.TotalBookCount,
+                AvailableEbookCount = model.AvailableEbookCount,
+                AudiobookCount = model.AudiobookCount,
+                AvailableAudiobookCount = model.AvailableAudiobookCount,
                 SizeOnDisk = model.SizeOnDisk
             };
         }

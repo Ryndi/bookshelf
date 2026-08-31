@@ -63,6 +63,9 @@ namespace NzbDrone.Core.AuthorStats
                 BookCount = bookStatistics.Sum(s => s.BookCount),
                 AvailableBookCount = bookStatistics.Sum(s => s.AvailableBookCount),
                 TotalBookCount = bookStatistics.Sum(s => s.TotalBookCount),
+                AvailableEbookCount = bookStatistics.Sum(s => s.AvailableEbookCount),
+                AudiobookCount = bookStatistics.Sum(s => s.AudiobookCount),
+                AvailableAudiobookCount = bookStatistics.Sum(s => s.AvailableAudiobookCount),
                 SizeOnDisk = bookStatistics.Sum(s => s.SizeOnDisk),
                 BookStatistics = bookStatistics
             };
