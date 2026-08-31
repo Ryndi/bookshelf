@@ -12,3 +12,9 @@
 
   transition: width 200ms ease;
 }
+
+.formats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}

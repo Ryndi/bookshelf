@@ -3,3 +3,23 @@
   display: flex;
   justify-content: center;
 }
+
+.formats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+.format {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.formatLabel {
+  width: 65px;
+  color: var(--disabledColor);
+  text-align: right;
+  font-size: $extraSmallFontSize;
+}

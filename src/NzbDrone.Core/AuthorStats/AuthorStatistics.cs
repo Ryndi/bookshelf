@@ -10,6 +10,9 @@ namespace NzbDrone.Core.AuthorStats
         public int BookCount { get; set; }
         public int AvailableBookCount { get; set; }
         public int TotalBookCount { get; set; }
+        public int AvailableEbookCount { get; set; }
+        public int AudiobookCount { get; set; }
+        public int AvailableAudiobookCount { get; set; }
         public long SizeOnDisk { get; set; }
         public List<BookStatistics> BookStatistics { get; set; }
     }

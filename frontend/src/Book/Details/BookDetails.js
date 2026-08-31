@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import AuthorHistoryTable from 'Author/History/AuthorHistoryTable';
+import BookFormatFilter, { ALL } from 'Book/BookFormatFilter';
 import DeleteBookModal from 'Book/Delete/DeleteBookModal';
 import EditBookModalConnector from 'Book/Edit/EditBookModalConnector';
 import BookFileEditorTable from 'BookFile/Editor/BookFileEditorTable';
@@ -21,7 +22,6 @@ import OrganizePreviewModalConnector from 'Organize/OrganizePreviewModalConnecto
 import RetagPreviewModalConnector from 'Retag/RetagPreviewModalConnector';
 import translate from 'Utilities/String/translate';
 import BookDetailsHeaderConnector from './BookDetailsHeaderConnector';
-import BookFormatFilter, { ALL } from './BookFormatFilter';
 import styles from './BookDetails.css';
 
 class BookDetails extends Component {

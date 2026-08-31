@@ -114,6 +114,9 @@ class AuthorIndexPoster extends Component {
       availableBookCount = 0,
       bookFileCount = 0,
       totalBookCount = 0,
+      availableEbookCount = 0,
+      audiobookCount = 0,
+      availableAudiobookCount = 0,
       sizeOnDisk = 0
     } = statistics;
 
@@ -217,6 +220,9 @@ class AuthorIndexPoster extends Component {
             availableBookCount={availableBookCount}
             bookFileCount={bookFileCount}
             totalBookCount={totalBookCount}
+            availableEbookCount={availableEbookCount}
+            audiobookCount={audiobookCount}
+            availableAudiobookCount={availableAudiobookCount}
             posterWidth={posterWidth}
             detailedProgressBar={detailedProgressBar}
           />

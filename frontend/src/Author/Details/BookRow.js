@@ -70,6 +70,8 @@ class BookRow extends Component {
       ratings,
       isSaving,
       authorMonitored,
+      authorSearchAudiobooks,
+      searchAudiobooks,
       titleSlug,
       bookFiles,
       indexerFlags,
@@ -79,8 +81,11 @@ class BookRow extends Component {
       columns
     } = this.props;
 
-    const bookFile = bookFiles[0];
     const isAvailable = Date.parse(releaseDate) < new Date();
+
+    // Mirrors COALESCE(Books.SearchAudiobooks, Authors.SearchAudiobooks) on the server: the book
+    // opts in or out on its own, and falls back to the author when it has no preference.
+    const wantsAudiobooks = searchAudiobooks ?? authorSearchAudiobooks ?? false;
 
     return (
       <TableRow>
@@ -223,7 +228,8 @@ class BookRow extends Component {
                   <BookStatus
                     isAvailable={isAvailable}
                     monitored={monitored}
-                    bookFile={bookFile}
+                    bookFiles={bookFiles}
+                    wantsAudiobooks={wantsAudiobooks}
                   />
                 </TableRowCell>
               );
@@ -263,6 +269,8 @@ BookRow.propTypes = {
   titleSlug: PropTypes.string.isRequired,
   isSaving: PropTypes.bool,
   authorMonitored: PropTypes.bool.isRequired,
+  authorSearchAudiobooks: PropTypes.bool,
+  searchAudiobooks: PropTypes.bool,
   bookFiles: PropTypes.arrayOf(PropTypes.object).isRequired,
   isEditorActive: PropTypes.bool.isRequired,
   isSelected: PropTypes.bool,

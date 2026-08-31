@@ -2,6 +2,9 @@
 // Please do not change this file!
 interface CssExports {
   'center': string;
+  'format': string;
+  'formatLabel': string;
+  'formats': string;
 }
 export const cssExports: CssExports;
 export default cssExports;

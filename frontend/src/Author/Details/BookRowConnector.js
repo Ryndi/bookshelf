@@ -34,6 +34,7 @@ function createMapStateToProps() {
       return {
         authorMonitored: author.monitored,
         authorName: author.authorName,
+        authorSearchAudiobooks: author.searchAudiobooks,
         bookFiles: files,
         indexerFlags: bookFile ? bookFile.indexerFlags : 0
       };
