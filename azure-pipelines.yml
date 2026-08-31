@@ -470,6 +470,7 @@ stages:
         env:
           TEST_DIR: $(Build.SourcesDirectory)/_tests
       - task: PublishTestResults@2
+        condition: succeededOrFailed()
         displayName: Publish Test Results
         inputs:
           testResultsFormat: 'NUnit'
@@ -526,6 +527,7 @@ stages:
           ${TESTSFOLDER}/test.sh Linux Unit Test
         displayName: Run Tests
       - task: PublishTestResults@2
+        condition: succeededOrFailed()
         displayName: Publish Test Results
         inputs:
           testResultsFormat: 'NUnit'
@@ -579,6 +581,7 @@ stages:
           ${TESTSFOLDER}/test.sh Linux Unit Test
         displayName: Run Tests
       - task: PublishTestResults@2
+        condition: succeededOrFailed()
         displayName: Publish Test Results
         inputs:
           testResultsFormat: 'NUnit'
@@ -632,6 +635,7 @@ stages:
           ${TESTSFOLDER}/test.sh Linux Unit Test
         displayName: Run Tests
       - task: PublishTestResults@2
+        condition: succeededOrFailed()
         displayName: Publish Test Results
         inputs:
           testResultsFormat: 'NUnit'
@@ -715,6 +719,7 @@ stages:
           ${TESTSFOLDER}/test.sh ${OSNAME} Integration Test
         displayName: Run Integration Tests
       - task: PublishTestResults@2
+        condition: succeededOrFailed()
         inputs:
           testResultsFormat: 'NUnit'
           testResultsFiles: '**/TestResult.xml'
@@ -777,6 +782,7 @@ stages:
             ${TESTSFOLDER}/test.sh Linux Integration Test
           displayName: Run Integration Tests
         - task: PublishTestResults@2
+          condition: succeededOrFailed()
           inputs:
             testResultsFormat: 'NUnit'
             testResultsFiles: '**/TestResult.xml'
@@ -840,6 +846,7 @@ stages:
             ${TESTSFOLDER}/test.sh Linux Integration Test
           displayName: Run Integration Tests
         - task: PublishTestResults@2
+          condition: succeededOrFailed()
           inputs:
             testResultsFormat: 'NUnit'
             testResultsFiles: '**/TestResult.xml'
@@ -886,6 +893,7 @@ stages:
           ${TESTSFOLDER}/test.sh Linux Integration Test
         displayName: Run Integration Tests
       - task: PublishTestResults@2
+        condition: succeededOrFailed()
         inputs:
           testResultsFormat: 'NUnit'
           testResultsFiles: '**/TestResult.xml'
@@ -955,6 +963,7 @@ stages:
           ${TESTSFOLDER}/test.sh Linux Integration Test
         displayName: Run Integration Tests
       - task: PublishTestResults@2
+        condition: succeededOrFailed()
         inputs:
           testResultsFormat: 'NUnit'
           testResultsFiles: '**/TestResult.xml'
@@ -1036,6 +1045,7 @@ stages:
         displayName: Publish Screenshot Bundle
         condition: and(succeeded(), eq(variables['System.JobAttempt'], '1'))
       - task: PublishTestResults@2
+        condition: succeededOrFailed()
         inputs:
           testResultsFormat: 'NUnit'
           testResultsFiles: '**/TestResult.xml'
