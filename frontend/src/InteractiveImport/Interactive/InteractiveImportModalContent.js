@@ -24,6 +24,7 @@ import SelectIndexerFlagsModal from 'InteractiveImport/IndexerFlags/SelectIndexe
 import SelectQualityModal from 'InteractiveImport/Quality/SelectQualityModal';
 import SelectReleaseGroupModal from 'InteractiveImport/ReleaseGroup/SelectReleaseGroupModal';
 import getErrorMessage from 'Utilities/Object/getErrorMessage';
+import isAudioQuality from 'Utilities/Quality/isAudioQuality';
 import translate from 'Utilities/String/translate';
 import getSelectedIds from 'Utilities/Table/getSelectedIds';
 import selectAll from 'Utilities/Table/selectAll';
@@ -136,6 +137,7 @@ class InteractiveImportModalContent extends Component {
       invalidRowsSelected: [],
       selectModalOpen: null,
       booksImported: [],
+      importedFormats: [],
       isConfirmImportModalOpen: false,
       inconsistentBookReleases: false
     };
@@ -195,16 +197,20 @@ class InteractiveImportModalContent extends Component {
 
     // potentially deleting files
     const selectedIds = this.getSelectedIds();
-    const booksImported = _(this.props.items)
-      .filter((x) => _.includes(selectedIds, x.id))
+    const selectedItems = _.filter(this.props.items, (x) => _.includes(selectedIds, x.id));
+
+    const booksImported = _(selectedItems)
       .keyBy((x) => x.book.id)
       .map((x) => x.book)
       .value();
 
-    console.log(booksImported);
+    // Only the formats actually being imported can replace anything, so the confirmation
+    // lists an existing ebook only when an ebook is on its way in.
+    const importedFormats = _.uniq(selectedItems.map((x) => isAudioQuality(x.quality)));
 
     this.setState({
       booksImported,
+      importedFormats,
       isConfirmImportModalOpen: true
     });
   };
@@ -296,6 +302,7 @@ class InteractiveImportModalContent extends Component {
       invalidRowsSelected,
       selectModalOpen,
       booksImported,
+      importedFormats,
       isConfirmImportModalOpen,
       inconsistentBookReleases
     } = this.state;
@@ -557,6 +564,7 @@ class InteractiveImportModalContent extends Component {
         <ConfirmImportModal
           isOpen={isConfirmImportModalOpen}
           books={booksImported}
+          importedFormats={importedFormats}
           onModalClose={this.onConfirmImportModalClose}
           onConfirmImportPress={this.onConfirmImportPress}
         />
