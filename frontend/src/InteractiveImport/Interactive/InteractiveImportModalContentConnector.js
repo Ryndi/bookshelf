@@ -61,6 +61,13 @@ class InteractiveImportModalContentConnector extends Component {
       replaceExistingFiles
     } = this.state;
 
+    // Opened without anything to look at - the folder is picked in a step before this one - so
+    // there is nothing to ask for yet. Asking anyway fails on the empty path and logs it as a
+    // failed request.
+    if (!folder && !downloadId && !authorId) {
+      return;
+    }
+
     this.props.fetchInteractiveImportItems({
       authorId,
       downloadId,
