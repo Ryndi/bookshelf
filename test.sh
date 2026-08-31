@@ -5,8 +5,9 @@ COVERAGE=$3
 WHERE="Category!=ManualTest"
 TEST_PATTERN="*Test.dll"
 FILES=( "Readarr.Api.Test.dll" "Readarr.Automation.Test.dll" "Readarr.Common.Test.dll" "Readarr.Core.Test.dll" "Readarr.Host.Test.dll" "Readarr.Integration.Test.dll" "Readarr.Libraries.Test.dll" "Readarr.Mono.Test.dll" "Readarr.Update.Test.dll" "Readarr.Windows.Test.dll" )
-ASSMEBLIES=""
+ASSEMBLIES=""
 TEST_LOG_FILE="TestLog.txt"
+TEST_RESULT_FILE="TestResult.xml"
 
 echo "test dir: $TEST_DIR"
 if [ -z "$TEST_DIR" ]; then
@@ -19,10 +20,14 @@ fi
 
 rm -f "$TEST_LOG_FILE"
 
+# Clear stale results so a run that dies before writing any cannot be graded
+# against a previous run's file.
+rm -f "$TEST_RESULT_FILE"
+
 # Uncomment to log test output to a file instead of the console
 # export READARR_TESTS_LOG_OUTPUT="File"
 
-VSTEST_PARAMS="--logger:nunit;LogFilePath=TestResult.xml"
+VSTEST_PARAMS="--logger:nunit;LogFilePath=$TEST_RESULT_FILE"
 
 if [ "$PLATFORM" = "Mac" ]; then
 
@@ -73,9 +78,8 @@ else
   exit 3
 fi
 
-if [ "$EXIT_CODE" -ge 0 ]; then
-  echo "Failed tests: $EXIT_CODE"
-  exit 0
-else
-  exit $EXIT_CODE
+if [ "$EXIT_CODE" -ne 0 ]; then
+  echo "dotnet test exited with $EXIT_CODE"
 fi
+
+exit $EXIT_CODE
