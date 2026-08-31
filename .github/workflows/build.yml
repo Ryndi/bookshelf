@@ -33,11 +33,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 1
 
-      - uses: jdx/mise-action@v3
+      - uses: jdx/mise-action@v4
 
       - name: Setup Environment Variables
         id: variables
@@ -47,7 +47,7 @@ jobs:
           echo "DATE=$(date --rfc-3339=date)" >> "$GITHUB_ENV"
 
       - name: Cache NuGet packages
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: _cache/nuget
           key: nuget-${{ runner.os }}-${{ hashFiles('src/Directory.Packages.props', 'src/**/*.csproj', 'global.json') }}
@@ -55,7 +55,7 @@ jobs:
             nuget-${{ runner.os }}-
 
       - name: Cache Node modules
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             _cache/node
@@ -65,7 +65,7 @@ jobs:
             node-${{ runner.os }}-
 
       - name: Cache MSBuild outputs
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: _cache/msbuild
           key: msbuild-${{ runner.os }}-${{ hashFiles('src/**/*.cs', 'src/**/*.csproj', 'src/**/*.targets', 'src/**/*.props') }}
@@ -74,7 +74,7 @@ jobs:
             msbuild-${{ runner.os }}-
 
       - name: Cache Webpack
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: _cache/webpack
           key: webpack-${{ runner.os }}-${{ hashFiles('frontend/src/**/*', 'yarn.lock') }}
@@ -100,7 +100,7 @@ jobs:
         run: ./test.sh Linux Unit Test
 
       - name: Report test results
-        uses: dorny/test-reporter@v2
+        uses: dorny/test-reporter@v3
         if: always()
         with:
           name: Unit Test Results
