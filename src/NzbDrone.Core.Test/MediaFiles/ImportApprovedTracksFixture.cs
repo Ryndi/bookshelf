@@ -283,5 +283,39 @@ namespace NzbDrone.Core.Test.MediaFiles
             added.Should().NotContain(f => f.Path == duplicate);
             added.Should().HaveCount(decisions.Count - 1);
         }
+
+        [Test]
+        public void should_link_the_file_to_an_edition_that_is_already_in_the_database()
+        {
+            // The file was matched against an edition built from metadata rather than the saved
+            // row, which is what happens on a fresh identification.
+            var item = _approvedDecisions.First().Item;
+            var saved = item.Edition;
+
+            item.Edition = Builder<Edition>.CreateNew()
+                .With(e => e.Id = 0)
+                .With(e => e.ForeignEditionId = saved.ForeignEditionId)
+                .With(e => e.Book = item.Book)
+                .Build();
+
+            Mocker.GetMock<IEditionService>()
+                .Setup(s => s.GetEditionByForeignEditionId(saved.ForeignEditionId))
+                .Returns(saved);
+
+            Mocker.GetMock<IEditionService>()
+                .Setup(s => s.SetMonitored(It.IsAny<Edition>()))
+                .Returns(new List<Edition> { saved });
+
+            List<BookFile> added = null;
+            Mocker.GetMock<IMediaFileService>()
+                .Setup(s => s.AddMany(It.IsAny<List<BookFile>>()))
+                .Callback<List<BookFile>>(f => added = f);
+
+            Subject.Import(new List<ImportDecision<LocalBook>> { _approvedDecisions.First() }, false);
+
+            // Writing it against edition 0 leaves the file belonging to no book at all.
+            added.Should().NotBeNull();
+            added.Should().OnlyContain(f => f.EditionId == saved.Id);
+        }
     }
 }

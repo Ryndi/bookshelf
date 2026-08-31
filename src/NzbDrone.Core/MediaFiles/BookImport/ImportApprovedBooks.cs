@@ -539,15 +539,18 @@ namespace NzbDrone.Core.MediaFiles.BookImport
 
                         return null;
                     }
-
-                    // Populate the new DB book
-                    foreach (var decision in decisions)
-                    {
-                        decision.Item.Edition = dbEdition;
-                    }
-
-                    edition = dbEdition;
                 }
+
+                // The edition the file was matched against is not the saved one, so point the file
+                // at the row that exists. This has to happen whether the edition was just added or
+                // was already there - otherwise the file is written against edition 0 and ends up
+                // belonging to no book at all.
+                foreach (var decision in decisions)
+                {
+                    decision.Item.Edition = dbEdition;
+                }
+
+                edition = dbEdition;
             }
 
             return edition;
