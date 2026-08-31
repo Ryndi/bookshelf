@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -94,6 +95,15 @@ namespace NzbDrone.Host
                 STJson.ApplySerializerSettings(options.JsonSerializerOptions);
             })
             .AddControllersAsServices();
+
+            services.Configure<ApiBehaviorOptions>(options =>
+            {
+                // The container is asked to register everything in these assemblies, which means
+                // it answers for the resource types too. Without this, a resource parameter is
+                // taken from the container rather than the request body, and every action that
+                // writes takes its resource that way - so they all arrived empty.
+                options.DisableImplicitFromServicesParameters = true;
+            });
 
             services.AddSwaggerGen(c =>
             {
