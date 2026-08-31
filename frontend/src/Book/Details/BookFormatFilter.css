@@ -1,0 +1,17 @@
+.formatFilter {
+  display: inline-block;
+  margin: 8px 0;
+}
+
+.option {
+  padding: 4px 10px;
+  border-bottom: 3px solid transparent;
+  color: var(--textColor);
+  cursor: pointer;
+}
+
+.selectedOption {
+  composes: option;
+
+  border-bottom-color: var(--linkColor);
+}

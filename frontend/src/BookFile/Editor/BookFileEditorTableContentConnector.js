@@ -8,6 +8,7 @@ import { deleteBookFile, deleteBookFiles, setBookFilesSort, updateBookFiles } fr
 import { fetchQualityProfileSchema } from 'Store/Actions/settingsActions';
 import createAuthorSelector from 'Store/Selectors/createAuthorSelector';
 import createClientSideCollectionSelector from 'Store/Selectors/createClientSideCollectionSelector';
+import filterByBookFormat from 'Utilities/Quality/filterByBookFormat';
 import getQualities from 'Utilities/Quality/getQualities';
 import BookFileEditorTableContent from './BookFileEditorTableContent';
 
@@ -36,11 +37,13 @@ function createSchemaSelector() {
 function createMapStateToProps() {
   return createSelector(
     (state, { bookId }) => bookId,
+    (state, { formatFilter }) => formatFilter,
     createClientSideCollectionSelector('bookFiles'),
     createSchemaSelector(),
     createAuthorSelector(),
     (
       bookId,
+      formatFilter,
       bookFiles,
       schema,
       author
@@ -49,9 +52,12 @@ function createMapStateToProps() {
         items,
         ...otherProps
       } = bookFiles;
+
+      // Filtered here rather than at render so selection, select-all and delete only ever
+      // act on the rows actually on screen.
       return {
         ...schema,
-        items,
+        items: filterByBookFormat(items, formatFilter),
         ...otherProps,
         isDeleting: bookFiles.isDeleting,
         isSaving: bookFiles.isSaving

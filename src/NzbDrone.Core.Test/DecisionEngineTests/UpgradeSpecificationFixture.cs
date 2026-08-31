@@ -19,9 +19,12 @@ namespace NzbDrone.Core.Test.DecisionEngineTests
             new object[] { Quality.AZW3, 1, Quality.AZW3, 2, Quality.AZW3, true },
             new object[] { Quality.MP3, 1, Quality.MP3, 2, Quality.MP3, true },
             new object[] { Quality.MP3, 1, Quality.MP3, 1, Quality.MP3, false },
-            new object[] { Quality.MP3, 1, Quality.AZW3, 2, Quality.MP3, false },
-            new object[] { Quality.MP3, 1, Quality.AZW3, 2, Quality.MP3, false },
-            new object[] { Quality.MP3, 1, Quality.MP3, 1, Quality.MP3, false }
+            new object[] { Quality.MP3, 1, Quality.MP3, 1, Quality.MP3, false },
+
+            // Ebooks and audiobooks are held side by side, so neither blocks the other even
+            // though the audio qualities sort above the text ones.
+            new object[] { Quality.MP3, 1, Quality.AZW3, 2, Quality.MP3, true },
+            new object[] { Quality.AZW3, 1, Quality.MP3, 2, Quality.AZW3, true }
         };
 
         private void GivenAutoDownloadPropers(ProperDownloadTypes type)

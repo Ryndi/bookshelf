@@ -5,6 +5,9 @@ function getNewAuthor(author, payload) {
     monitor,
     monitorNewItems,
     qualityProfileId,
+    searchAudiobooks = false,
+    audiobookQualityProfileId = 0,
+    audiobookRootFolderPath = '',
     metadataProfileId,
     tags,
     searchForMissingBooks = false
@@ -19,6 +22,9 @@ function getNewAuthor(author, payload) {
   author.monitored = true;
   author.monitorNewItems = monitorNewItems;
   author.qualityProfileId = qualityProfileId;
+  author.searchAudiobooks = searchAudiobooks;
+  author.audiobookQualityProfileId = audiobookQualityProfileId;
+  author.audiobookRootFolderPath = audiobookRootFolderPath;
   author.metadataProfileId = metadataProfileId;
   author.rootFolderPath = rootFolderPath;
   author.tags = tags;

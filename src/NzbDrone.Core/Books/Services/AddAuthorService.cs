@@ -143,6 +143,13 @@ namespace NzbDrone.Core.Books
             }
 
             newAuthor.Path = path;
+
+            // Audiobooks get the same folder name under their own root.
+            if (newAuthor.AudiobookRootFolderPath.IsNotNullOrWhiteSpace())
+            {
+                newAuthor.AudiobookPath = Path.Combine(newAuthor.AudiobookRootFolderPath, _fileNameBuilder.GetAuthorFolder(newAuthor));
+            }
+
             newAuthor.CleanName = newAuthor.Metadata.Value.Name.CleanAuthorName();
             newAuthor.Added = DateTime.UtcNow;
 

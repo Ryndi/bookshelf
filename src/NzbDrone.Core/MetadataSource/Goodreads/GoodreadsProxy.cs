@@ -217,7 +217,7 @@ namespace NzbDrone.Core.MetadataSource.Goodreads
 
             book.Editions = new List<Edition> { edition };
 
-            Debug.Assert(!book.Editions.Value.Any() || book.Editions.Value.Count(x => x.Monitored) == 1, "one edition monitored");
+            Debug.Assert(book.Editions.Value.GroupBy(x => BookFormat.IsAudiobook(x)).All(g => g.Count(x => x.Monitored) <= 1), "at most one edition monitored per format");
 
             return book;
         }

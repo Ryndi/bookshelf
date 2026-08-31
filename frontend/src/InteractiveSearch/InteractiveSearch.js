@@ -6,6 +6,7 @@ import LoadingIndicator from 'Components/Loading/LoadingIndicator';
 import Table from 'Components/Table/Table';
 import TableBody from 'Components/Table/TableBody';
 import { icons, kinds, sortDirections } from 'Helpers/Props';
+import filterByBookFormat from 'Utilities/Quality/filterByBookFormat';
 import translate from 'Utilities/String/translate';
 import InteractiveSearchRow from './InteractiveSearchRow';
 import styles from './InteractiveSearch.css';
@@ -97,7 +98,8 @@ function InteractiveSearch(props) {
     isPopulated,
     error,
     totalReleasesCount,
-    items,
+    items: allItems,
+    formatFilter,
     sortKey,
     sortDirection,
     longDateFormat,
@@ -105,6 +107,8 @@ function InteractiveSearch(props) {
     onSortPress,
     onGrabPress
   } = props;
+
+  const items = filterByBookFormat(allItems, formatFilter);
 
   return (
     <div>
@@ -182,6 +186,7 @@ InteractiveSearch.propTypes = {
   error: PropTypes.object,
   totalReleasesCount: PropTypes.number.isRequired,
   items: PropTypes.arrayOf(PropTypes.object).isRequired,
+  formatFilter: PropTypes.string,
   sortKey: PropTypes.string,
   sortDirection: PropTypes.string,
   type: PropTypes.string.isRequired,

@@ -146,7 +146,7 @@ namespace Readarr.Api.V1.Books
         [HttpGet("{id:int}/overview")]
         public object Overview(int id)
         {
-            var overview = _editionService.GetEditionsByBook(id).Single(x => x.Monitored).Overview;
+            var overview = _editionService.GetEditionsByBook(id).PrimaryMonitored()?.Overview;
             return new
             {
                 id,
@@ -172,14 +172,24 @@ namespace Readarr.Api.V1.Books
             _bookService.UpdateBook(model);
             _editionService.UpdateMany(model.Editions.Value);
 
-            var newEdition = model.Editions.Value.SingleOrDefault(e => e.Monitored);
+            // Move existing files onto the newly monitored edition of their own format. A file whose
+            // format is no longer monitored is left where it is rather than mis-filed against the other.
+            var monitoredEditions = model.Editions.Value.Where(e => e.Monitored).ToList();
 
-            if (newEdition != null)
+            if (monitoredEditions.Any())
             {
                 var files = _mediaFileService.GetFilesByBook(model.Id);
 
                 foreach (var file in files)
                 {
+                    var isAudio = MediaFileExtensions.IsAudioFile(file.Path);
+                    var newEdition = monitoredEditions.FirstOrDefault(e => BookFormat.IsAudiobook(e) == isAudio);
+
+                    if (newEdition == null || file.EditionId == newEdition.Id)
+                    {
+                        continue;
+                    }
+
                     file.EditionId = newEdition.Id;
                     file.Edition = newEdition;
 

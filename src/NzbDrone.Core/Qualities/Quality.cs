@@ -101,6 +101,8 @@ namespace NzbDrone.Core.Qualities
                 AllLookup[quality.Id] = quality;
             }
 
+            AudioIds = new HashSet<int> { UnknownAudio.Id, MP3.Id, M4B.Id, FLAC.Id };
+
             DefaultQualityDefinitions = new HashSet<QualityDefinition>
             {
                 new QualityDefinition(Quality.Unknown)      { Weight = 1, MinSize = 0, MaxSize = 350, GroupWeight = 1 },
@@ -118,6 +120,15 @@ namespace NzbDrone.Core.Qualities
         public static readonly List<Quality> All;
 
         public static readonly Quality[] AllLookup;
+
+        // Audiobook and ebook qualities share one ordered profile, but they are never
+        // upgrades of each other, so they are compared and cut off independently.
+        public static readonly HashSet<int> AudioIds;
+
+        public static bool IsAudio(Quality quality)
+        {
+            return quality != null && AudioIds.Contains(quality.Id);
+        }
 
         public static readonly HashSet<QualityDefinition> DefaultQualityDefinitions;
 

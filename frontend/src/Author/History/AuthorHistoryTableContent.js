@@ -6,6 +6,7 @@ import LoadingIndicator from 'Components/Loading/LoadingIndicator';
 import Table from 'Components/Table/Table';
 import TableBody from 'Components/Table/TableBody';
 import { icons, kinds } from 'Helpers/Props';
+import filterByBookFormat from 'Utilities/Quality/filterByBookFormat';
 import translate from 'Utilities/String/translate';
 import AuthorHistoryRowConnector from './AuthorHistoryRowConnector';
 import styles from './AuthorHistoryTableContent.css';
@@ -67,10 +68,12 @@ class AuthorHistoryTableContent extends Component {
       isFetching,
       isPopulated,
       error,
-      items,
+      items: allItems,
+      formatFilter,
       onMarkAsFailedPress
     } = this.props;
 
+    const items = filterByBookFormat(allItems, formatFilter);
     const fullAuthor = bookId == null;
     const hasItems = !!items.length;
 
@@ -125,6 +128,7 @@ AuthorHistoryTableContent.propTypes = {
   isPopulated: PropTypes.bool.isRequired,
   error: PropTypes.object,
   items: PropTypes.arrayOf(PropTypes.object).isRequired,
+  formatFilter: PropTypes.string,
   onMarkAsFailedPress: PropTypes.func.isRequired
 };
 

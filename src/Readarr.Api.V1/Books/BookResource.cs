@@ -24,6 +24,9 @@ namespace Readarr.Api.V1.Books
         public string TitleSlug { get; set; }
         public bool Monitored { get; set; }
         public bool AnyEditionOk { get; set; }
+
+        // Null inherits the author's setting.
+        public bool? SearchAudiobooks { get; set; }
         public Ratings Ratings { get; set; }
         public DateTime? ReleaseDate { get; set; }
         public int PageCount { get; set; }
@@ -53,7 +56,7 @@ namespace Readarr.Api.V1.Books
                 return null;
             }
 
-            var selectedEdition = model.Editions?.Value.Where(x => x.Monitored).SingleOrDefault();
+            var selectedEdition = model.Editions?.Value.PrimaryMonitored();
 
             var title = selectedEdition?.Title ?? model.Title;
             var authorTitle = $"{model.AuthorMetadata?.Value?.SortNameLastFirst} {title}";
@@ -70,6 +73,7 @@ namespace Readarr.Api.V1.Books
                 TitleSlug = model.TitleSlug,
                 Monitored = model.Monitored,
                 AnyEditionOk = model.AnyEditionOk,
+                SearchAudiobooks = model.SearchAudiobooks,
                 ReleaseDate = model.ReleaseDate,
                 PageCount = selectedEdition?.PageCount ?? 0,
                 Genres = model.Genres,
@@ -103,7 +107,8 @@ namespace Readarr.Api.V1.Books
                 Title = resource.Title,
                 Monitored = resource.Monitored,
                 AnyEditionOk = resource.AnyEditionOk,
-                Editions = resource.Editions.ToModel(),
+                SearchAudiobooks = resource.SearchAudiobooks,
+                Editions = resource.Editions?.ToModel() ?? new List<Edition>(),
                 AddOptions = resource.AddOptions,
                 Author = author,
                 AuthorMetadata = author.Metadata.Value
@@ -115,7 +120,13 @@ namespace Readarr.Api.V1.Books
             var updatedBook = resource.ToModel();
 
             book.ApplyChanges(updatedBook);
-            book.Editions = updatedBook.Editions;
+
+            // A caller may post without an editions array; keep the book's existing editions
+            // rather than clearing them.
+            if (resource.Editions != null)
+            {
+                book.Editions = updatedBook.Editions;
+            }
 
             return book;
         }

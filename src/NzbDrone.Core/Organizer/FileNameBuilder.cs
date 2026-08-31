@@ -20,7 +20,7 @@ namespace NzbDrone.Core.Organizer
     {
         string BuildBookFileName(Author author, Edition edition, BookFile bookFile, NamingConfig namingConfig = null, List<CustomFormat> customFormats = null);
         string BuildBookFilePath(Author author, Edition edition, string fileName, string extension);
-        string BuildBookPath(Author author);
+        string BuildBookPath(Author author, string extension = null);
         BasicNamingConfig GetBasicNamingConfig(NamingConfig nameSpec);
         string GetAuthorFolder(Author author, NamingConfig namingConfig = null);
     }
@@ -123,14 +123,16 @@ namespace NzbDrone.Core.Organizer
         {
             Ensure.That(extension, () => extension).IsNotNullOrWhiteSpace();
 
-            var path = BuildBookPath(author);
+            var path = BuildBookPath(author, extension);
 
             return Path.Combine(path, fileName + extension);
         }
 
-        public string BuildBookPath(Author author)
+        // Audiobooks are routed to their own folder when the author has one configured; an unknown
+        // extension falls back to the author's main path.
+        public string BuildBookPath(Author author, string extension = null)
         {
-            return author.Path;
+            return author.PathForExtension(extension);
         }
 
         public BasicNamingConfig GetBasicNamingConfig(NamingConfig nameSpec)

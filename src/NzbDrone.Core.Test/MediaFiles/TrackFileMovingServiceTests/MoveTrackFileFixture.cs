@@ -28,6 +28,7 @@ namespace NzbDrone.Core.Test.MediaFiles.TrackFileMovingServiceTests
         {
             _author = Builder<Author>.CreateNew()
                                      .With(s => s.Path = @"C:\Test\Music\Author".AsOsAgnostic())
+                                     .With(s => s.AudiobookPath = null)
                                      .Build();
 
             _trackFile = Builder<BookFile>.CreateNew()
@@ -49,7 +50,7 @@ namespace NzbDrone.Core.Test.MediaFiles.TrackFileMovingServiceTests
                   .Returns(@"C:\Test\Music\Author\Book\File Name.mp3".AsOsAgnostic());
 
             Mocker.GetMock<IBuildFileNames>()
-                  .Setup(s => s.BuildBookPath(It.IsAny<Author>()))
+                  .Setup(s => s.BuildBookPath(It.IsAny<Author>(), It.IsAny<string>()))
                   .Returns(@"C:\Test\Music\Author\Book".AsOsAgnostic());
 
             var rootFolder = @"C:\Test\Music\".AsOsAgnostic();

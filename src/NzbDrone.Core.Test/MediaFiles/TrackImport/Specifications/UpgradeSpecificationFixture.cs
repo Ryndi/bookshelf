@@ -1,12 +1,74 @@
+using System.Collections.Generic;
+using System.Linq;
+using FizzWare.NBuilder;
+using FluentAssertions;
 using NUnit.Framework;
+using NzbDrone.Core.Books;
+using NzbDrone.Core.Datastore;
+using NzbDrone.Core.MediaFiles;
 using NzbDrone.Core.MediaFiles.BookImport.Specifications;
+using NzbDrone.Core.Parser.Model;
+using NzbDrone.Core.Profiles.Qualities;
+using NzbDrone.Core.Qualities;
 using NzbDrone.Core.Test.Framework;
+using NzbDrone.Test.Common;
 
 namespace NzbDrone.Core.Test.MediaFiles.BookImport.Specifications
 {
     [TestFixture]
     public class UpgradeSpecificationFixture : CoreTest<UpgradeSpecification>
     {
+        private LocalBook _localBook;
+
+        [SetUp]
+        public void Setup()
+        {
+            var author = Builder<Author>.CreateNew()
+                .With(a => a.QualityProfile = new QualityProfile
+                {
+                    Items = Qualities.QualityFixture.GetDefaultQualities()
+                })
+                .Build();
+
+            _localBook = new LocalBook
+            {
+                Path = @"C:\Test\Author\book.epub".AsOsAgnostic(),
+                Quality = new QualityModel(Quality.EPUB, new Revision(version: 1)),
+                Author = author,
+                Book = Builder<Book>.CreateNew().Build()
+            };
+        }
+
+        private void GivenExistingFiles(params QualityModel[] qualities)
+        {
+            _localBook.Book.BookFiles = new LazyLoaded<List<BookFile>>(
+                qualities.Select(q => new BookFile { Quality = q }).ToList());
+        }
+
+        [Test]
+        public void should_accept_when_the_book_has_no_existing_files()
+        {
+            GivenExistingFiles();
+
+            Subject.IsSatisfiedBy(_localBook, null).Accepted.Should().BeTrue();
+        }
+
+        [Test]
+        public void should_accept_an_ebook_when_only_an_audiobook_is_on_disk()
+        {
+            GivenExistingFiles(new QualityModel(Quality.MP3, new Revision(version: 1)));
+
+            Subject.IsSatisfiedBy(_localBook, null).Accepted.Should().BeTrue();
+        }
+
+        [Test]
+        public void should_reject_a_downgrade_within_the_same_format()
+        {
+            GivenExistingFiles(new QualityModel(Quality.AZW3, new Revision(version: 1)));
+
+            Subject.IsSatisfiedBy(_localBook, null).Accepted.Should().BeFalse();
+        }
+
         /*
         private Author _author;
         private Book _book;

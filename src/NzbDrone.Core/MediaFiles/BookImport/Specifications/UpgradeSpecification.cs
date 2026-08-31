@@ -34,9 +34,13 @@ namespace NzbDrone.Core.MediaFiles.BookImport.Specifications
             }
 
             var downloadPropersAndRepacks = _configService.DownloadPropersAndRepacks;
-            var qualityComparer = new QualityModelComparer(item.Author.QualityProfile);
+            var qualityComparer = new QualityModelComparer(item.Author.ProfileFor(item.Quality));
 
-            foreach (var bookFile in files)
+            // Only files of the same format compete; an incoming ebook is not a downgrade just
+            // because an audiobook of the same book is already on disk.
+            var isAudio = Quality.IsAudio(item.Quality.Quality);
+
+            foreach (var bookFile in files.Where(f => Quality.IsAudio(f.Quality.Quality) == isAudio))
             {
                 var qualityCompare = qualityComparer.Compare(item.Quality.Quality, bookFile.Quality.Quality);
 

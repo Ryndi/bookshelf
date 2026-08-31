@@ -35,6 +35,9 @@ class AuthorEditorFooter extends Component {
       monitored: NO_CHANGE,
       monitorNewItems: NO_CHANGE,
       qualityProfileId: NO_CHANGE,
+      searchAudiobooks: NO_CHANGE,
+      audiobookQualityProfileId: NO_CHANGE,
+      audiobookRootFolderPath: NO_CHANGE,
       metadataProfileId: NO_CHANGE,
       rootFolderPath: NO_CHANGE,
       savingTags: false,
@@ -63,6 +66,9 @@ class AuthorEditorFooter extends Component {
         monitored: NO_CHANGE,
         monitorNewItems: NO_CHANGE,
         qualityProfileId: NO_CHANGE,
+        searchAudiobooks: NO_CHANGE,
+        audiobookQualityProfileId: NO_CHANGE,
+        audiobookRootFolderPath: NO_CHANGE,
         metadataProfileId: NO_CHANGE,
         rootFolderPath: NO_CHANGE,
         savingTags: false
@@ -89,6 +95,9 @@ class AuthorEditorFooter extends Component {
         break;
       case 'monitored':
         this.props.onSaveSelected({ [name]: value === 'monitored' });
+        break;
+      case 'searchAudiobooks':
+        this.props.onSaveSelected({ [name]: value === 'yes' });
         break;
       default:
         this.props.onSaveSelected({ [name]: value });
@@ -163,6 +172,9 @@ class AuthorEditorFooter extends Component {
       monitored,
       monitorNewItems,
       qualityProfileId,
+      searchAudiobooks,
+      audiobookQualityProfileId,
+      audiobookRootFolderPath,
       metadataProfileId,
       rootFolderPath,
       savingTags,
@@ -176,6 +188,12 @@ class AuthorEditorFooter extends Component {
       { key: NO_CHANGE, value: translate('NoChange'), isDisabled: true },
       { key: 'monitored', value: translate('Monitored') },
       { key: 'unmonitored', value: translate('Unmonitored') }
+    ];
+
+    const searchAudiobooksOptions = [
+      { key: NO_CHANGE, value: translate('NoChange'), isDisabled: true },
+      { key: 'yes', value: translate('Yes') },
+      { key: 'no', value: translate('No') }
     ];
 
     return (
@@ -223,6 +241,52 @@ class AuthorEditorFooter extends Component {
                 value={qualityProfileId}
                 includeNoChange={true}
                 isDisabled={!selectedCount}
+                onChange={this.onInputChange}
+              />
+            </div>
+
+            <div className={styles.inputContainer}>
+              <AuthorEditorFooterLabel
+                label={translate('SearchAudiobooks')}
+                isSaving={isSaving && searchAudiobooks !== NO_CHANGE}
+              />
+
+              <SelectInput
+                name="searchAudiobooks"
+                value={searchAudiobooks}
+                values={searchAudiobooksOptions}
+                isDisabled={!selectedCount}
+                onChange={this.onInputChange}
+              />
+            </div>
+
+            <div className={styles.inputContainer}>
+              <AuthorEditorFooterLabel
+                label={translate('AudiobookQualityProfile')}
+                isSaving={isSaving && audiobookQualityProfileId !== NO_CHANGE}
+              />
+
+              <QualityProfileSelectInputConnector
+                name="audiobookQualityProfileId"
+                value={audiobookQualityProfileId}
+                includeNoChange={true}
+                isDisabled={!selectedCount}
+                onChange={this.onInputChange}
+              />
+            </div>
+
+            <div className={styles.inputContainer}>
+              <AuthorEditorFooterLabel
+                label={translate('AudiobookRootFolder')}
+                isSaving={isSaving && audiobookRootFolderPath !== NO_CHANGE}
+              />
+
+              <RootFolderSelectInputConnector
+                name="audiobookRootFolderPath"
+                value={audiobookRootFolderPath}
+                includeNoChange={true}
+                isDisabled={!selectedCount}
+                selectedValueOptions={{ includeFreeSpace: false }}
                 onChange={this.onInputChange}
               />
             </div>

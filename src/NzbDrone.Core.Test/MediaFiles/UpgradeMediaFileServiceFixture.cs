@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using FizzWare.NBuilder;
 using FluentAssertions;
 using Moq;
@@ -66,6 +67,19 @@ namespace NzbDrone.Core.Test.MediaFiles
                 .Build();
         }
 
+        private void GivenBookWithFiles(params string[] fileNames)
+        {
+            var files = fileNames.Select((name, index) => new BookFile
+            {
+                Id = index + 1,
+                Path = Path.Combine(_rootPath, name)
+            }).ToList();
+
+            _localTrack.Book = Builder<Book>.CreateNew()
+                .With(e => e.BookFiles = new LazyLoaded<List<BookFile>>(files))
+                .Build();
+        }
+
         [Test]
         public void should_delete_single_track_file_once()
         {
@@ -120,6 +134,57 @@ namespace NzbDrone.Core.Test.MediaFiles
             GivenSingleTrackWithSingleTrackFile();
 
             Subject.UpgradeBookFile(_trackFile, _localTrack).OldFiles.Count.Should().Be(1);
+        }
+
+        [Test]
+        public void should_not_delete_audiobook_when_importing_ebook()
+        {
+            GivenBookWithFiles("book.m4b");
+            _trackFile.Path = Path.Combine(_rootPath, "book.epub");
+
+            Subject.UpgradeBookFile(_trackFile, _localTrack).OldFiles.Should().BeEmpty();
+
+            Mocker.GetMock<IRecycleBinProvider>().Verify(v => v.DeleteFile(It.IsAny<string>(), It.IsAny<string>()), Times.Never());
+            Mocker.GetMock<IMediaFileService>().Verify(v => v.Delete(It.IsAny<BookFile>(), It.IsAny<DeleteMediaFileReason>()), Times.Never());
+        }
+
+        [Test]
+        public void should_not_delete_ebook_when_importing_audiobook()
+        {
+            GivenBookWithFiles("book.epub");
+            _trackFile.Path = Path.Combine(_rootPath, "book.m4b");
+
+            Subject.UpgradeBookFile(_trackFile, _localTrack).OldFiles.Should().BeEmpty();
+
+            Mocker.GetMock<IRecycleBinProvider>().Verify(v => v.DeleteFile(It.IsAny<string>(), It.IsAny<string>()), Times.Never());
+            Mocker.GetMock<IMediaFileService>().Verify(v => v.Delete(It.IsAny<BookFile>(), It.IsAny<DeleteMediaFileReason>()), Times.Never());
+        }
+
+        [Test]
+        public void should_only_replace_existing_file_of_the_same_type()
+        {
+            GivenBookWithFiles("book.epub", "book.m4b");
+            _trackFile.Path = Path.Combine(_rootPath, "book.azw3");
+
+            var oldFiles = Subject.UpgradeBookFile(_trackFile, _localTrack).OldFiles;
+
+            oldFiles.Should().HaveCount(1);
+            oldFiles.Single().Path.Should().EndWith(".epub");
+
+            Mocker.GetMock<IRecycleBinProvider>().Verify(v => v.DeleteFile(It.IsAny<string>(), It.IsAny<string>()), Times.Once());
+        }
+
+        [Test]
+        public void should_reuse_calibre_id_from_file_of_the_other_type()
+        {
+            GivenBookWithFiles("book.epub");
+            _localTrack.Book.BookFiles.Value[0].CalibreId = 42;
+            _trackFile.CalibreId = 0;
+            _trackFile.Path = Path.Combine(_rootPath, "book.m4b");
+
+            Subject.UpgradeBookFile(_trackFile, _localTrack);
+
+            _trackFile.CalibreId.Should().Be(42);
         }
 
         [Test]

@@ -153,7 +153,7 @@ namespace NzbDrone.Core.MediaFiles.BookImport
 
             var qualifiedImports = decisions.Where(c => c.Approved)
                 .GroupBy(c => c.Item.Author.Id, (i, s) => s
-                         .OrderByDescending(c => c.Item.Quality, new QualityModelComparer(s.First().Item.Author.QualityProfile))
+                         .OrderByDescending(c => c.Item.Quality, new QualityModelComparer(s.First().Item.Author.ProfileFor(s.First().Item.Quality)))
                          .ThenByDescending(c => c.Item.Size))
                 .SelectMany(c => c)
                 .ToList();
@@ -324,16 +324,21 @@ namespace NzbDrone.Core.MediaFiles.BookImport
             foreach (var bookImport in bookImports)
             {
                 var book = bookImport.First().ImportDecision.Item.Book;
-                var edition = book.Editions.Value.Single(x => x.Monitored);
                 var author = bookImport.First().ImportDecision.Item.Author;
+
+                var editionIds = bookImport.Select(e => e.ImportDecision.Item.Edition)
+                    .Where(e => e != null)
+                    .Select(e => e.Id)
+                    .Distinct()
+                    .ToList();
 
                 if (bookImport.Where(e => e.Errors.Count == 0).ToList().Count > 0 && author != null && book != null)
                 {
                     _eventAggregator.PublishEvent(new BookImportedEvent(
                         author,
                         book,
-                        allImportedTrackFiles.Where(s => s.EditionId == edition.Id).ToList(),
-                        allOldTrackFiles.Where(s => s.EditionId == edition.Id).ToList(),
+                        allImportedTrackFiles.Where(s => editionIds.Contains(s.EditionId)).ToList(),
+                        allOldTrackFiles.Where(s => editionIds.Contains(s.EditionId)).ToList(),
                         replaceExisting,
                         downloadClientItem));
                 }

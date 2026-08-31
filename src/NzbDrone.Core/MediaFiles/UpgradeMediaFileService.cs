@@ -47,13 +47,27 @@ namespace NzbDrone.Core.MediaFiles
         public BookFileMoveResult UpgradeBookFile(BookFile bookFile, LocalBook localBook, bool copyOnly = false)
         {
             var moveFileResult = new BookFileMoveResult();
-            var existingFiles = localBook.Book.BookFiles.Value;
+            var allFiles = localBook.Book.BookFiles.Value;
+
+            // An ebook and an audiobook of the same book can be held side by side, so only files of the
+            // same type are replaced by the incoming one.
+            var isAudio = MediaFileExtensions.IsAudioFile(bookFile.Path);
+            var existingFiles = allFiles.Where(f => MediaFileExtensions.IsAudioFile(f.Path) == isAudio).ToList();
 
             var rootFolderPath = _diskProvider.GetParentFolder(localBook.Author.Path);
             var rootFolder = _rootFolderService.GetBestRootFolder(rootFolderPath);
             var isCalibre = rootFolder.IsCalibreLibrary && rootFolder.CalibreSettings != null;
 
             var settings = rootFolder.CalibreSettings;
+
+            // Calibre keeps every format under a single book, so keep the link even when the only
+            // files we have for this book are of the other type.
+            var existingCalibreId = allFiles.FirstOrDefault(f => f.CalibreId > 0)?.CalibreId ?? 0;
+
+            if (existingCalibreId > 0)
+            {
+                bookFile.CalibreId = existingCalibreId;
+            }
 
             // If there are existing book files and the root folder is missing, throw, so the old file isn't left behind during the import process.
             if (existingFiles.Any() && !_diskProvider.FolderExists(rootFolderPath))
@@ -66,8 +80,6 @@ namespace NzbDrone.Core.MediaFiles
                 var bookFilePath = file.Path;
                 var subfolder = rootFolderPath.GetRelativePath(_diskProvider.GetParentFolder(bookFilePath));
 
-                bookFile.CalibreId = file.CalibreId;
-
                 if (_diskProvider.FileExists(bookFilePath))
                 {
                     _logger.Debug("Removing existing book file: {0} CalibreId: {1}", file, file.CalibreId);
@@ -79,7 +91,7 @@ namespace NzbDrone.Core.MediaFiles
                     else
                     {
                         var existing = _calibre.GetBook(file.CalibreId, settings);
-                        var existingFormats = existing.Formats.Keys;
+                        var existingFormats = existing.Formats.Keys.Where(f => MediaFileExtensions.AudioExtensions.Contains("." + f) == isAudio).ToList();
                         _logger.Debug($"Removing existing formats {existingFormats.ConcatToString()} from calibre");
                         _calibre.RemoveFormats(file.CalibreId, existingFormats, settings);
                     }

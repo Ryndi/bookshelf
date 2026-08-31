@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NzbDrone.Common.Extensions;
 using NzbDrone.Core.Qualities;
 
 namespace NzbDrone.Core.MediaFiles
@@ -59,6 +60,11 @@ namespace NzbDrone.Core.MediaFiles
             }
 
             return Quality.Unknown;
+        }
+
+        public static bool IsAudioFile(string path)
+        {
+            return path.IsNotNullOrWhiteSpace() && _audioExtensions.ContainsKey(path.GetPathExtension());
         }
     }
 }

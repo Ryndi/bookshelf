@@ -29,7 +29,7 @@ namespace NzbDrone.Core.DecisionEngine.Specifications
 
         public virtual Decision IsSatisfiedBy(RemoteBook subject, SearchCriteriaBase searchCriteria)
         {
-            var qualityProfile = subject.Author.QualityProfile.Value;
+            var qualityProfile = subject.Author.ProfileFor(subject.ParsedBookInfo.Quality);
 
             foreach (var file in subject.Books.SelectMany(b => b.BookFiles.Value))
             {

@@ -3,6 +3,7 @@ using System.IO;
 using NLog;
 using NzbDrone.Common.Disk;
 using NzbDrone.Common.EnsureThat;
+using NzbDrone.Common.Extensions;
 using NzbDrone.Core.Books;
 using NzbDrone.Core.Configuration;
 using NzbDrone.Core.MediaFiles.BookImport;
@@ -145,8 +146,12 @@ namespace NzbDrone.Core.MediaFiles
         private void EnsureBookFolder(BookFile bookFile, Author author, Book book, string filePath)
         {
             var trackFolder = Path.GetDirectoryName(filePath);
-            var bookFolder = _buildFileNames.BuildBookPath(author);
-            var authorFolder = author.Path;
+
+            // Audiobooks may live under a different root, so the folders to create follow the
+            // file's own format rather than the author's ebook path.
+            var extension = bookFile.Path.GetPathExtension();
+            var bookFolder = _buildFileNames.BuildBookPath(author, extension);
+            var authorFolder = author.PathForExtension(extension);
             var rootFolder = new OsPath(authorFolder).Directory.FullPath;
 
             if (!_diskProvider.FolderExists(rootFolder))

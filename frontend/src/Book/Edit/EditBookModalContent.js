@@ -29,6 +29,20 @@ class EditBookModalContent extends Component {
 
   };
 
+  // The select carries strings, but the field is a nullable bool where null means
+  // "inherit from the author".
+  onSearchAudiobooksChange = ({ name, value }) => {
+    let converted = null;
+
+    if (value === 'true') {
+      converted = true;
+    } else if (value === 'false') {
+      converted = false;
+    }
+
+    this.props.onInputChange({ name, value: converted });
+  };
+
   //
   // Render
 
@@ -50,11 +64,21 @@ class EditBookModalContent extends Component {
     const {
       monitored,
       anyEditionOk,
+      searchAudiobooks,
       editions
     } = item;
 
+    const searchAudiobooksValue = searchAudiobooks && searchAudiobooks.value != null
+      ? String(searchAudiobooks.value)
+      : '';
+
     const hasFile = statistics ? statistics.bookFileCount > 0 : false;
     const errorMessage = getErrorMessage(error, 'Unable to load editions');
+
+    // A book monitors one edition per format, so each format gets its own picker.
+    const editionList = editions && editions.value ? editions.value : [];
+    const hasEbookEditions = editionList.some((e) => !e.isAudiobook);
+    const hasAudiobookEditions = editionList.some((e) => e.isAudiobook);
 
     return (
       <ModalContent onModalClose={onModalClose}>
@@ -94,6 +118,25 @@ class EditBookModalContent extends Component {
               />
             </FormGroup>
 
+            <FormGroup>
+              <FormLabel>
+                {translate('SearchAudiobooks')}
+              </FormLabel>
+
+              <FormInputGroup
+                type={inputTypes.SELECT}
+                name="searchAudiobooks"
+                helpText={translate('BookSearchAudiobooksHelpText')}
+                value={searchAudiobooksValue}
+                values={[
+                  { key: '', value: translate('DefaultFromAuthor') },
+                  { key: 'true', value: translate('Yes') },
+                  { key: 'false', value: translate('No') }
+                ]}
+                onChange={this.onSearchAudiobooksChange}
+              />
+            </FormGroup>
+
             {
               isFetching &&
                 <LoadingIndicator />
@@ -105,10 +148,10 @@ class EditBookModalContent extends Component {
             }
 
             {
-              isPopulated && !isFetching && !!editions.value.length &&
+              isPopulated && !isFetching && hasEbookEditions &&
                 <FormGroup>
                   <FormLabel>
-                    {translate('Edition')}
+                    {translate('EbookEdition')}
                   </FormLabel>
 
                   <FormInputGroup
@@ -117,6 +160,26 @@ class EditBookModalContent extends Component {
                     helpText={translate('EditionsHelpText')}
                     isDisabled={anyEditionOk.value && hasFile}
                     bookEditions={editions}
+                    isAudiobook={false}
+                    onChange={onInputChange}
+                  />
+                </FormGroup>
+            }
+
+            {
+              isPopulated && !isFetching && hasAudiobookEditions &&
+                <FormGroup>
+                  <FormLabel>
+                    {translate('AudiobookEdition')}
+                  </FormLabel>
+
+                  <FormInputGroup
+                    type={inputTypes.BOOK_EDITION_SELECT}
+                    name="editions"
+                    helpText={translate('EditionsHelpText')}
+                    isDisabled={anyEditionOk.value && hasFile}
+                    bookEditions={editions}
+                    isAudiobook={true}
                     onChange={onInputChange}
                   />
                 </FormGroup>

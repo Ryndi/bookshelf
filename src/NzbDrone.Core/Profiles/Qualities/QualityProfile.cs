@@ -16,6 +16,7 @@ namespace NzbDrone.Core.Profiles.Qualities
         public string Name { get; set; }
         public bool UpgradeAllowed { get; set; }
         public int Cutoff { get; set; }
+        public int AudiobookCutoff { get; set; }
         public int MinFormatScore { get; set; }
         public int CutoffFormatScore { get; set; }
         public List<ProfileFormatItem> FormatItems { get; set; }
@@ -33,6 +34,45 @@ namespace NzbDrone.Core.Profiles.Qualities
             // Returning any item from the group will work,
             // returning the first because it's the true first quality.
             return firstAllowed.Items.First().Quality;
+        }
+
+        // Audiobooks and ebooks are never upgrades of each other, so each format stops at its
+        // own cutoff. Profiles written before AudiobookCutoff existed fall back to the first
+        // allowed audiobook quality, which stops at the first acceptable file rather than
+        // chasing an ebook cutoff an audiobook can never reach.
+        public int CutoffFor(Quality quality)
+        {
+            return CutoffFor(Quality.IsAudio(quality));
+        }
+
+        public int CutoffFor(bool audio)
+        {
+            if (!audio)
+            {
+                return Cutoff;
+            }
+
+            if (AudiobookCutoff > 0 && IsAllowedCutoff(AudiobookCutoff))
+            {
+                return AudiobookCutoff;
+            }
+
+            return FirstAllowedQuality(true).Id;
+        }
+
+        public Quality FirstAllowedQuality(bool audio)
+        {
+            var first = Items.Where(q => q.Allowed)
+                .SelectMany(q => q.GetQualities())
+                .FirstOrDefault(q => Quality.IsAudio(q) == audio);
+
+            return first ?? FirstAllowedQuality();
+        }
+
+        private bool IsAllowedCutoff(int id)
+        {
+            return Items.Any(i => i.Allowed &&
+                                  ((i.Id > 0 && i.Id == id) || i.GetQualities().Any(q => q.Id == id)));
         }
 
         public Quality LastAllowedQuality()

@@ -76,10 +76,15 @@ class EditAuthorModalContent extends Component {
       monitored,
       monitorNewItems,
       qualityProfileId,
+      audiobookQualityProfileId,
+      searchAudiobooks,
+      audiobookRootFolderPath,
       metadataProfileId,
       path,
       tags
     } = item;
+
+    const wantsAudiobooks = Boolean(searchAudiobooks && searchAudiobooks.value);
 
     return (
       <ModalContent onModalClose={onModalClose}>
@@ -140,6 +145,54 @@ class EditAuthorModalContent extends Component {
                 onChange={onInputChange}
               />
             </FormGroup>
+
+            <FormGroup>
+              <FormLabel>
+                {translate('SearchAudiobooks')}
+              </FormLabel>
+
+              <FormInputGroup
+                type={inputTypes.CHECK}
+                name="searchAudiobooks"
+                helpText={translate('SearchAudiobooksHelpText')}
+                {...searchAudiobooks}
+                onChange={onInputChange}
+              />
+            </FormGroup>
+
+            {
+              wantsAudiobooks &&
+                <FormGroup>
+                  <FormLabel>
+                    {translate('AudiobookQualityProfile')}
+                  </FormLabel>
+
+                  <FormInputGroup
+                    type={inputTypes.QUALITY_PROFILE_SELECT}
+                    name="audiobookQualityProfileId"
+                    helpText={translate('AudiobookQualityProfileHelpText')}
+                    {...audiobookQualityProfileId}
+                    onChange={onInputChange}
+                  />
+                </FormGroup>
+            }
+
+            {
+              wantsAudiobooks &&
+                <FormGroup>
+                  <FormLabel>
+                    {translate('AudiobookRootFolder')}
+                  </FormLabel>
+
+                  <FormInputGroup
+                    type={inputTypes.ROOT_FOLDER_SELECT}
+                    name="audiobookRootFolderPath"
+                    helpText={translate('AudiobookRootFolderHelpText')}
+                    {...audiobookRootFolderPath}
+                    onChange={onInputChange}
+                  />
+                </FormGroup>
+            }
 
             {
               showMetadataProfile &&

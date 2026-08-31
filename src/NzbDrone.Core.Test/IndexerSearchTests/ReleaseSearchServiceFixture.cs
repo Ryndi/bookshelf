@@ -163,5 +163,55 @@ namespace NzbDrone.Core.Test.IndexerSearchTests
 
             criteria.Count.Should().Be(0);
         }
+
+        private void GivenEditions(params (string Title, bool Monitored)[] editions)
+        {
+            _firstBook.Editions = editions.Select((e, index) => Builder<Edition>.CreateNew()
+                .With(x => x.Id = index + 1)
+                .With(x => x.Book = _firstBook)
+                .With(x => x.Title = e.Title)
+                .With(x => x.Monitored = e.Monitored)
+                .Build()).ToList();
+        }
+
+        [Test]
+        public async Task should_search_once_per_distinct_monitored_edition_title()
+        {
+            GivenEditions(("A Book", true), ("A Book: Unabridged", true));
+
+            var allCriteria = WatchForSearchCriteria();
+
+            await Subject.BookSearch(_firstBook, false, true, false);
+
+            var criteria = allCriteria.OfType<BookSearchCriteria>().ToList();
+
+            criteria.Select(c => c.BookTitle).Should().BeEquivalentTo("A Book", "A Book: Unabridged");
+        }
+
+        [Test]
+        public async Task should_search_once_when_monitored_editions_share_a_title()
+        {
+            GivenEditions(("A Book", true), ("A Book", true));
+
+            var allCriteria = WatchForSearchCriteria();
+
+            await Subject.BookSearch(_firstBook, false, true, false);
+
+            allCriteria.OfType<BookSearchCriteria>().Should().HaveCount(1);
+        }
+
+        [Test]
+        public async Task should_not_search_for_unmonitored_editions()
+        {
+            GivenEditions(("A Book", true), ("A Book: Unabridged", false));
+
+            var allCriteria = WatchForSearchCriteria();
+
+            await Subject.BookSearch(_firstBook, false, true, false);
+
+            var criteria = allCriteria.OfType<BookSearchCriteria>().ToList();
+
+            criteria.Select(c => c.BookTitle).Should().BeEquivalentTo("A Book");
+        }
     }
 }
