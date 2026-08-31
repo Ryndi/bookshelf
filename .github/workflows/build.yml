@@ -1,7 +1,12 @@
 name: CI
 
 permissions:
+  contents: read
   packages: write
+
+  # dorny/test-reporter publishes a check run, which needs this. Without it the step fails
+  # even when the tests themselves passed.
+  checks: write
 
 on:
   workflow_dispatch:
