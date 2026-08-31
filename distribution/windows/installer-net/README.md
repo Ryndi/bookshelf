@@ -76,7 +76,7 @@ The installer is built via `build.sh`:
 ```
 
 This:
-1. Builds Readarr and packages it (`_artifacts/win-x64/net10.0/Readarr/`)
+1. Builds Readarr and packages it (`_artifacts/win-x64/net6.0/Readarr/`)
 2. Zips the payload (excluding `Readarr.Update`) into an embedded resource
 3. Publishes a single-file self-contained exe to `distribution/windows/setup/output/`
 

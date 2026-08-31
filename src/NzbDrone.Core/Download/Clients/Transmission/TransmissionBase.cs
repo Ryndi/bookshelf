@@ -78,9 +78,7 @@ namespace NzbDrone.Core.Download.Clients.Transmission
                 {
                     try
                     {
-                        // Cast to double deliberately: the long overload added in .NET 9 throws
-                        // ArgumentOutOfRangeException instead of the OverflowException this falls back on.
-                        item.RemainingTime = TimeSpan.FromSeconds((double)torrent.Eta);
+                        item.RemainingTime = TimeSpan.FromSeconds(torrent.Eta);
                     }
                     catch (OverflowException)
                     {

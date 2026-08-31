@@ -294,24 +294,6 @@ namespace NzbDrone.Core.Datastore
                 // Generic collection
                 item = body.Arguments[0];
             }
-            else if (body.Method.DeclaringType == typeof(MemoryExtensions))
-            {
-                // Arrays used to bind to Enumerable.Contains, but now bind to
-                // MemoryExtensions.Contains(ReadOnlySpan<T>, T[, IEqualityComparer<T>]).
-                // Unwrap the implicit array -> span conversion to get the array back.
-                // A non-null comparer has no SQL equivalent, so refuse to translate it.
-                if (body.Arguments.Count < 2 ||
-                    (body.Arguments.Count == 3 && body.Arguments[2] is not ConstantExpression { Value: null }) ||
-                    body.Arguments[0] is not MethodCallExpression conversion ||
-                    conversion.Method.Name != "op_Implicit" ||
-                    conversion.Arguments.Count != 1)
-                {
-                    throw new NotSupportedException("Unexpected form of Enumerable.Contains");
-                }
-
-                list = conversion.Arguments[0];
-                item = body.Arguments[1];
-            }
             else
             {
                 // Static method

@@ -9,5 +9,11 @@ namespace NzbDrone.Core.MediaFiles.Azw
             : base(message)
         {
         }
+
+        protected AzwTagException(System.Runtime.Serialization.SerializationInfo info,
+            System.Runtime.Serialization.StreamingContext context)
+            : base(info, context)
+        {
+        }
     }
 }

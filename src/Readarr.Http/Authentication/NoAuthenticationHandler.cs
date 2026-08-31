@@ -13,8 +13,9 @@ namespace Readarr.Http.Authentication
     {
         public NoAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
-            UrlEncoder encoder)
-            : base(options, logger, encoder)
+            UrlEncoder encoder,
+            ISystemClock clock)
+            : base(options, logger, encoder, clock)
         {
         }
 

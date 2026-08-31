@@ -59,7 +59,7 @@ namespace NzbDrone.Host
             services.Configure<ForwardedHeadersOptions>(options =>
             {
                 options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
-                options.KnownIPNetworks.Clear();
+                options.KnownNetworks.Clear();
                 options.KnownProxies.Clear();
             });
 

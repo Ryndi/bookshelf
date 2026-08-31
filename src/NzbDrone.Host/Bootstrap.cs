@@ -269,14 +269,7 @@ namespace NzbDrone.Host
 
             try
             {
-                certificate = X509CertificateLoader.LoadPkcs12FromFile(cert, password, X509KeyStorageFlags.DefaultKeySet);
-            }
-            catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
-            {
-                // The old X509Certificate2 constructor reported a missing file as a CryptographicException;
-                // X509CertificateLoader surfaces the real IO exception instead.
-                throw new ReadarrStartupException(ex,
-                    $"The SSL certificate file {cert} does not exist");
+                certificate = new X509Certificate2(cert, password, X509KeyStorageFlags.DefaultKeySet);
             }
             catch (CryptographicException ex)
             {

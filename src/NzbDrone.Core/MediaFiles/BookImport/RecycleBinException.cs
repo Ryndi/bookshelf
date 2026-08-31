@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.Serialization;
 
 namespace NzbDrone.Core.MediaFiles.BookImport
 {
@@ -16,6 +17,11 @@ namespace NzbDrone.Core.MediaFiles.BookImport
 
         public RecycleBinException(string message, Exception innerException)
             : base(message, innerException)
+        {
+        }
+
+        protected RecycleBinException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
         {
         }
     }

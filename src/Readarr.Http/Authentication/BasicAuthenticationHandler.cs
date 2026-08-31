@@ -20,8 +20,9 @@ namespace Readarr.Http.Authentication
         public BasicAuthenticationHandler(IAuthenticationService authService,
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
-            UrlEncoder encoder)
-            : base(options, logger, encoder)
+            UrlEncoder encoder,
+            ISystemClock clock)
+            : base(options, logger, encoder, clock)
         {
             _authService = authService;
         }
@@ -70,7 +71,7 @@ namespace Readarr.Http.Authentication
 
         protected override Task HandleChallengeAsync(AuthenticationProperties properties)
         {
-            Response.Headers["WWW-Authenticate"] = $"Basic realm=\"{BuildInfo.AppName}\"";
+            Response.Headers.Add("WWW-Authenticate", $"Basic realm=\"{BuildInfo.AppName}\"");
             Response.StatusCode = 401;
             return Task.CompletedTask;
         }

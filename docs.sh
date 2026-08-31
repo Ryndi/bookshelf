@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-FRAMEWORK="net10.0"
+FRAMEWORK="net6.0"
 PLATFORM=$1
 
 if [ "$PLATFORM" = "Windows" ]; then

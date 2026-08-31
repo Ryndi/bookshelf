@@ -10,11 +10,6 @@
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <RuntimeIdentifiers>linux-x64;linux-musl-x64;linux-musl-arm64</RuntimeIdentifiers>
 
-    <!-- Up to net6.0 a RuntimeIdentifier implied this; from net8.0 onwards it does not. The
-         docker image copies the publish output onto a bare alpine base with no runtime
-         installed, so it has to stay explicit or the container builds and refuses to start. -->
-    <SelfContained>true</SelfContained>
-
     <ReadarrRootDir>$(MSBuildThisFileDirectory)..\</ReadarrRootDir>
 
     <!-- Specifies the type of output -->
@@ -207,6 +202,6 @@
   <PropertyGroup Condition="'$(IsOSX)' == 'true' and
                             '$(RuntimeIdentifier)' == ''">
     <_UsingDefaultRuntimeIdentifier>true</_UsingDefaultRuntimeIdentifier>
-    <RuntimeIdentifier>osx-$(Architecture)</RuntimeIdentifier>
+    <RuntimeIdentifier>osx-x64</RuntimeIdentifier>
   </PropertyGroup>
 </Project>
