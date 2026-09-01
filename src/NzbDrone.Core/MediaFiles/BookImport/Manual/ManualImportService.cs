@@ -297,6 +297,14 @@ namespace NzbDrone.Core.MediaFiles.BookImport.Manual
             return item;
         }
 
+        // Identifies the set a file would be a part of: one edition, in one format. Format is
+        // included because a book can hold an ebook and an audiobook, and those are not parts of
+        // each other even when the edition is unknown on both.
+        private static string PartKey(ManualImportFile file)
+        {
+            return $"{file.ForeignEditionId}|{MediaFileExtensions.IsAudioFile(file.Path)}";
+        }
+
         public void Execute(ManualImportCommand message)
         {
             _logger.ProgressTrace("Manually importing {0} files using mode {1}", message.Files.Count, message.ImportMode);
@@ -317,6 +325,14 @@ namespace NzbDrone.Core.MediaFiles.BookImport.Manual
                     book.AnyEditionOk = false;
                     _bookService.UpdateBook(book);
                 }
+
+                // Parts are the pieces of one book in one format. An ebook and an audiobook of the
+                // same book are two formats of it, not a two part book, so counting every file
+                // being imported for the book made each look like a part of the other and put a
+                // part number in both of their names.
+                var partCounts = importBookId
+                    .GroupBy(f => PartKey(f))
+                    .ToDictionary(g => g.Key, g => g.Count());
 
                 foreach (var file in importBookId)
                 {
@@ -342,7 +358,7 @@ namespace NzbDrone.Core.MediaFiles.BookImport.Manual
                         FileTrackInfo = fileTrackInfo,
                         Path = file.Path,
                         Part = fileTrackInfo.TrackNumbers.Any() ? fileTrackInfo.TrackNumbers.First() : 1,
-                        PartCount = importBookId.Count(),
+                        PartCount = partCounts[PartKey(file)],
                         Size = fileInfo.Length,
                         Modified = fileInfo.LastWriteTimeUtc,
                         Quality = file.Quality,
