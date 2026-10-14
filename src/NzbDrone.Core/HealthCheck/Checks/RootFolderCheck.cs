@@ -32,8 +32,15 @@ namespace NzbDrone.Core.HealthCheck.Checks
 
         public override HealthCheck Check()
         {
+            // Audiobooks can be kept under a root of their own, which can go missing the same way.
+            var audiobookPaths = _authorService.GetAllAuthors()
+                                               .Select(a => a.AudiobookPath)
+                                               .Where(p => p.IsNotNullOrWhiteSpace());
+
             var rootFolders = _authorService.AllAuthorPaths()
-                                                           .Select(s => _rootFolderService.GetBestRootFolderPath(s.Value))
+                                                           .Select(s => s.Value)
+                                                           .Concat(audiobookPaths)
+                                                           .Select(s => _rootFolderService.GetBestRootFolderPath(s))
                                                            .Distinct();
 
             var missingRootFolders = rootFolders.Where(s => !s.IsPathValid(PathValidationType.CurrentOs) || !_diskProvider.FolderExists(s))
