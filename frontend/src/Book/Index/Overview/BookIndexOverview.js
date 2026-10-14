@@ -130,7 +130,10 @@ class BookIndexOverview extends Component {
       bookCount,
       sizeOnDisk,
       bookFileCount,
-      totalBookCount
+      totalBookCount,
+      availableEbookCount,
+      audiobookCount,
+      availableAudiobookCount
     } = statistics;
 
     const {
@@ -195,6 +198,9 @@ class BookIndexOverview extends Component {
               bookCount={bookCount}
               bookFileCount={bookFileCount}
               totalBookCount={totalBookCount}
+              availableEbookCount={availableEbookCount}
+              audiobookCount={audiobookCount}
+              availableAudiobookCount={availableAudiobookCount}
               posterWidth={posterWidth}
               detailedProgressBar={overviewOptions.detailedProgressBar}
             />

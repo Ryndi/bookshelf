@@ -12,9 +12,34 @@ function BookIndexProgressBar(props) {
     bookCount,
     bookFileCount,
     totalBookCount,
+    availableEbookCount,
+    audiobookCount,
+    availableAudiobookCount,
     posterWidth,
     detailedProgressBar
   } = props;
+
+  // A book wanting an audiobook as well is complete only once it holds both formats. Counted by
+  // files alone, holding the ebook would show it as done with the audiobook still missing.
+  if (audiobookCount) {
+    const ebooks = availableEbookCount ? 1 : 0;
+    const audiobooks = availableAudiobookCount ? 1 : 0;
+    const formatProgress = ((ebooks + audiobooks) / 2) * 100;
+
+    return (
+      <ProgressBar
+        className={styles.progressBar}
+        containerClassName={styles.progress}
+        progress={100}
+        kind={getProgressBarKind('ended', monitored, formatProgress)}
+        size={detailedProgressBar ? sizes.MEDIUM : sizes.SMALL}
+        showText={detailedProgressBar}
+        text={`${ebooks + audiobooks} / 2`}
+        title={`${translate('Ebook')}: ${ebooks} / 1, ${translate('Audiobook')}: ${audiobooks} / 1`}
+        width={posterWidth}
+      />
+    );
+  }
 
   const progress = bookFileCount && bookCount ? (totalBookCount / bookCount) * 100 : 0;
   const text = `${bookFileCount ? bookCount : 0} / ${totalBookCount}`;
@@ -43,8 +68,17 @@ BookIndexProgressBar.propTypes = {
   bookCount: PropTypes.number.isRequired,
   bookFileCount: PropTypes.number.isRequired,
   totalBookCount: PropTypes.number.isRequired,
+  availableEbookCount: PropTypes.number,
+  audiobookCount: PropTypes.number,
+  availableAudiobookCount: PropTypes.number,
   posterWidth: PropTypes.number.isRequired,
   detailedProgressBar: PropTypes.bool.isRequired
+};
+
+BookIndexProgressBar.defaultProps = {
+  availableEbookCount: 0,
+  audiobookCount: 0,
+  availableAudiobookCount: 0
 };
 
 export default BookIndexProgressBar;
