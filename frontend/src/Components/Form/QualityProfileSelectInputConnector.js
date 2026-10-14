@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 import { createSelector } from 'reselect';
 import createSortedSectionSelector from 'Store/Selectors/createSortedSectionSelector';
 import sortByName from 'Utilities/Array/sortByName';
+import isAudioQualityItem from 'Utilities/Quality/isAudioQualityItem';
 import translate from 'Utilities/String/translate';
 import SelectInput from './SelectInput';
 
@@ -38,8 +39,14 @@ function createMapStateToProps() {
         });
       }
 
+      // Profiles that take an audiobook quality, so a select for an audiobook profile can start on one.
+      const audioProfileIds = qualityProfiles.items
+        .filter((qualityProfile) => qualityProfile.items.some((item) => item.allowed && isAudioQualityItem(item)))
+        .map((qualityProfile) => qualityProfile.id);
+
       return {
-        values
+        values,
+        audioProfileIds
       };
     }
   );
@@ -54,11 +61,17 @@ class QualityProfileSelectInputConnector extends Component {
     const {
       name,
       value,
-      values
+      values,
+      audioProfileIds,
+      preferAudio
     } = this.props;
 
     if (!value || !values.some((option) => option.key === value || parseInt(option.key) === value)) {
-      const firstValue = values.find((option) => !isNaN(parseInt(option.key)));
+      const profiles = values.filter((option) => !isNaN(parseInt(option.key)));
+
+      // An audiobook profile starts on one that takes audio. The first by name is usually
+      // "eBook", which would turn every audiobook away without anyone having chosen it.
+      const firstValue = (preferAudio && profiles.find((option) => audioProfileIds.includes(option.key))) || profiles[0];
 
       if (firstValue) {
         this.onChange({ name, value: firstValue.key });
@@ -90,12 +103,15 @@ QualityProfileSelectInputConnector.propTypes = {
   name: PropTypes.string.isRequired,
   value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   values: PropTypes.arrayOf(PropTypes.object).isRequired,
+  audioProfileIds: PropTypes.arrayOf(PropTypes.number).isRequired,
   includeNoChange: PropTypes.bool.isRequired,
+  preferAudio: PropTypes.bool.isRequired,
   onChange: PropTypes.func.isRequired
 };
 
 QualityProfileSelectInputConnector.defaultProps = {
-  includeNoChange: false
+  includeNoChange: false,
+  preferAudio: false
 };
 
 export default connect(createMapStateToProps)(QualityProfileSelectInputConnector);

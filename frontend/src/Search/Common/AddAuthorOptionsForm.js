@@ -166,6 +166,7 @@ class AddAuthorOptionsForm extends Component {
                 name="audiobookQualityProfileId"
                 helpText={translate('AudiobookQualityProfileHelpText')}
                 {...audiobookQualityProfileId}
+                preferAudio={true}
                 onChange={onInputChange}
               />
             </FormGroup>
