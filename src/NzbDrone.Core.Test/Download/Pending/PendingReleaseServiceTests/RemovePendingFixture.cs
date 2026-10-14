@@ -8,6 +8,7 @@ using NzbDrone.Core.Books;
 using NzbDrone.Core.Download.Pending;
 using NzbDrone.Core.Parser;
 using NzbDrone.Core.Parser.Model;
+using NzbDrone.Core.Qualities;
 using NzbDrone.Core.Test.Framework;
 
 namespace NzbDrone.Core.Test.Download.Pending.PendingReleaseServiceTests
@@ -47,15 +48,28 @@ namespace NzbDrone.Core.Test.Download.Pending.PendingReleaseServiceTests
                   .Returns(new List<Book> { _book });
         }
 
-        private void AddPending(int id, string book)
+        private void AddPending(int id, string book, Quality quality = null)
         {
             _pending.Add(new PendingRelease
             {
                 Id = id,
                 Title = "Author.Title-Book.Title.abc-Readarr",
-                ParsedBookInfo = new ParsedBookInfo { BookTitle = book },
+                ParsedBookInfo = new ParsedBookInfo { BookTitle = book, Quality = quality == null ? null : new QualityModel(quality) },
                 Release = Builder<ReleaseInfo>.CreateNew().Build()
             });
+        }
+
+        [Test]
+        public void should_not_remove_a_pending_release_of_the_other_format()
+        {
+            AddPending(id: 1, book: "Book", quality: Quality.EPUB);
+            AddPending(id: 2, book: "Book", quality: Quality.M4B);
+
+            var queueId = HashConverter.GetHashInt31(string.Format("pending-{0}-book{1}", 1, _book.Id));
+
+            Subject.RemovePendingQueueItems(queueId);
+
+            AssertRemoved(1);
         }
 
         [Test]

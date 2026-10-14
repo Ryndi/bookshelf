@@ -235,12 +235,13 @@ namespace NzbDrone.Core.Download.Pending
                 }
             }
 
-            //Return best quality release for each book
-            var deduped = queued.GroupBy(q => q.Book.Id).Select(g =>
+            // Return the best quality release for each book in each format. An ebook and an audiobook
+            // of a book are pending side by side, and each is ranked by the profile for its format.
+            var deduped = queued.GroupBy(q => new { BookId = q.Book.Id, IsAudio = Quality.IsAudio(q.Quality?.Quality) }).Select(g =>
             {
                 var author = g.First().Author;
 
-                return g.OrderByDescending(e => e.Quality, new QualityModelComparer(author.QualityProfile))
+                return g.OrderByDescending(e => e.Quality, new QualityModelComparer(author.ProfileFor(g.First().Quality)))
                         .ThenBy(q => PrioritizeDownloadProtocol(q.Author, q.Protocol))
                         .First();
             });
@@ -258,8 +259,13 @@ namespace NzbDrone.Core.Download.Pending
             var targetItem = FindPendingRelease(queueId);
             var authorReleases = _repository.AllByAuthorId(targetItem.AuthorId);
 
+            // Removing the pending ebook leaves a pending audiobook of the same book alone, and the
+            // other way round.
+            var isAudio = Quality.IsAudio(targetItem.ParsedBookInfo.Quality?.Quality);
+
             var releasesToRemove = authorReleases.Where(
-                c => c.ParsedBookInfo.BookTitle == targetItem.ParsedBookInfo.BookTitle);
+                c => c.ParsedBookInfo.BookTitle == targetItem.ParsedBookInfo.BookTitle &&
+                     Quality.IsAudio(c.ParsedBookInfo.Quality?.Quality) == isAudio);
 
             _repository.DeleteMany(releasesToRemove.Select(c => c.Id));
         }
