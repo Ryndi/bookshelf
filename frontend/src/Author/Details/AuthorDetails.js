@@ -554,7 +554,9 @@ class AuthorDetails extends Component {
                       value={formatFilter}
                       onChange={this.onFormatFilterChange}
                     />
+                    {/* Remounted per format, so selection starts afresh with the rows on screen. */}
                     <BookFileEditorTable
+                      key={formatFilter}
                       authorId={id}
                       formatFilter={formatFilter}
                     />
