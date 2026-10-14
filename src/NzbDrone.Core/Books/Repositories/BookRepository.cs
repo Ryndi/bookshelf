@@ -5,6 +5,7 @@ using NzbDrone.Common.Extensions;
 using NzbDrone.Core.Datastore;
 using NzbDrone.Core.MediaFiles;
 using NzbDrone.Core.Messaging.Events;
+using NzbDrone.Core.Profiles.Qualities;
 using NzbDrone.Core.Qualities;
 
 namespace NzbDrone.Core.Books
@@ -105,12 +106,12 @@ namespace NzbDrone.Core.Books
             return Query(s => s.TitleSlug == titleSlug).SingleOrDefault();
         }
 
-        private SqlBuilder BooksWithoutFilesBuilder(DateTime currentTime) => Builder()
+        private SqlBuilder BooksWithoutFilesBuilder(DateTime currentTime, List<int> audiobookOnlyProfileIds) => Builder()
             .Join<Book, Author>((l, r) => l.AuthorMetadataId == r.AuthorMetadataId)
             .Join<Author, AuthorMetadata>((l, r) => l.AuthorMetadataId == r.Id)
             .Where(HasMonitoredEditionClause())
             .Where<Book>(a => a.ReleaseDate <= currentTime)
-            .Where(BuildMissingFormatWhereClause());
+            .Where(BuildMissingFormatWhereClause(audiobookOnlyProfileIds));
 
         // Joining Editions to require a monitored one returns the book once per monitored
         // edition, and a book tracking an ebook and an audiobook has two of them, so it appeared
@@ -125,12 +126,27 @@ namespace NzbDrone.Core.Books
 
         // A book is wanted while it is missing an ebook, or - when audiobooks are switched on for
         // it - while it is missing an audiobook. Owning one format no longer satisfies the other.
-        private string BuildMissingFormatWhereClause()
+        // An author whose profile takes no ebook at all wants audiobooks instead: an audiobook
+        // library from before audiobooks had a setting of their own, where wanting an ebook would
+        // put every book on the list for a format its profile can never grab. This matches
+        // Author.WantsEbooks and Author.WantsAudiobooks.
+        private string BuildMissingFormatWhereClause(List<int> audiobookOnlyProfileIds)
         {
             var isTrue = _database.DatabaseType == DatabaseType.PostgreSQL ? "true" : "1";
-            var wantsAudiobooks = $"COALESCE(\"Books\".\"SearchAudiobooks\", \"Authors\".\"SearchAudiobooks\") = {isTrue}";
+            var audiobookOnly = audiobookOnlyProfileIds.Any()
+                ? $"\"Authors\".\"QualityProfileId\" IN ({string.Join(", ", audiobookOnlyProfileIds)})"
+                : "1 = 0";
+            var wantsAudiobooks = $"(COALESCE(\"Books\".\"SearchAudiobooks\", \"Authors\".\"SearchAudiobooks\") = {isTrue} OR {audiobookOnly})";
 
-            return $"(NOT EXISTS {HasFileOfFormatSubquery(false)} OR ({wantsAudiobooks} AND NOT EXISTS {HasFileOfFormatSubquery(true)}))";
+            return $"((NOT ({audiobookOnly}) AND NOT EXISTS {HasFileOfFormatSubquery(false)}) OR ({wantsAudiobooks} AND NOT EXISTS {HasFileOfFormatSubquery(true)}))";
+        }
+
+        private List<int> AudiobookOnlyProfileIds()
+        {
+            return _database.Query<QualityProfile>(new SqlBuilder(_database.DatabaseType))
+                .Where(p => !p.Allows(false))
+                .Select(p => p.Id)
+                .ToList();
         }
 
         private string HasFileOfFormatSubquery(bool audio)
@@ -148,9 +164,10 @@ namespace NzbDrone.Core.Books
         public PagingSpec<Book> BooksWithoutFiles(PagingSpec<Book> pagingSpec)
         {
             var currentTime = DateTime.UtcNow;
+            var audiobookOnlyProfileIds = AudiobookOnlyProfileIds();
 
-            pagingSpec.Records = GetPagedRecords(BooksWithoutFilesBuilder(currentTime), pagingSpec, PagedQuery);
-            pagingSpec.TotalRecords = GetPagedRecordCount(BooksWithoutFilesBuilder(currentTime).SelectCountDistinct<Book>(x => x.Id), pagingSpec);
+            pagingSpec.Records = GetPagedRecords(BooksWithoutFilesBuilder(currentTime, audiobookOnlyProfileIds), pagingSpec, PagedQuery);
+            pagingSpec.TotalRecords = GetPagedRecordCount(BooksWithoutFilesBuilder(currentTime, audiobookOnlyProfileIds).SelectCountDistinct<Book>(x => x.Id), pagingSpec);
 
             return pagingSpec;
         }
@@ -172,6 +189,13 @@ namespace NzbDrone.Core.Books
                 foreach (var belowCutoff in profile.QualityIds)
                 {
                     clauses.Add(string.Format("(\"Authors\".\"QualityProfileId\" = {0} AND \"BookFiles\".\"Quality\" LIKE '%_quality_: {1},%')", profile.ProfileId, belowCutoff));
+                }
+
+                // Audio files are judged by the author's audiobook profile when one is set, the way
+                // Author.ProfileFor picks it for releases.
+                foreach (var belowCutoff in profile.AudiobookQualityIds)
+                {
+                    clauses.Add(string.Format("(COALESCE(NULLIF(\"Authors\".\"AudiobookQualityProfileId\", 0), \"Authors\".\"QualityProfileId\") = {0} AND \"BookFiles\".\"Quality\" LIKE '%_quality_: {1},%')", profile.ProfileId, belowCutoff));
                 }
             }
 

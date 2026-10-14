@@ -7,6 +7,8 @@ using NUnit.Framework;
 using NzbDrone.Core.Books;
 using NzbDrone.Core.Datastore;
 using NzbDrone.Core.MediaFiles;
+using NzbDrone.Core.Profiles;
+using NzbDrone.Core.Profiles.Qualities;
 using NzbDrone.Core.Qualities;
 using NzbDrone.Core.Test.Framework;
 
@@ -15,6 +17,7 @@ namespace NzbDrone.Core.Test.MusicTests.BookRepositoryTests
     [TestFixture]
     public class BooksWithoutFilesFixture : DbTest<BookRepository, Book>
     {
+        private Author _author;
         private Book _book;
         private Edition _edition;
         private int _fileCount;
@@ -26,13 +29,13 @@ namespace NzbDrone.Core.Test.MusicTests.BookRepositoryTests
                 .Build();
             Db.Insert(meta);
 
-            var author = Builder<Author>.CreateNew()
+            _author = Builder<Author>.CreateNew()
                 .With(a => a.Id = 0)
                 .With(a => a.AuthorMetadataId = meta.Id)
                 .With(a => a.Monitored = true)
                 .With(a => a.SearchAudiobooks = authorWantsAudiobooks)
                 .Build();
-            Db.Insert(author);
+            Db.Insert(_author);
 
             _book = Builder<Book>.CreateNew()
                 .With(b => b.Id = 0)
@@ -65,6 +68,24 @@ namespace NzbDrone.Core.Test.MusicTests.BookRepositoryTests
                 .Build();
 
             Db.Insert(file);
+        }
+
+        // The default "Spoken" profile, as an audiobook library set up before audiobooks had a
+        // setting of their own would use.
+        private void GivenAudiobookOnlyProfile()
+        {
+            var profile = new QualityProfile
+            {
+                Name = "Spoken",
+                Cutoff = Quality.MP3.Id,
+                Items = Qualities.QualityFixture.GetDefaultQualities(Quality.MP3, Quality.M4B),
+                FormatItems = new List<ProfileFormatItem>()
+            };
+
+            Db.Insert(profile);
+
+            _author.QualityProfileId = profile.Id;
+            Db.Update(_author);
         }
 
         private List<Book> Missing()
@@ -123,6 +144,27 @@ namespace NzbDrone.Core.Test.MusicTests.BookRepositoryTests
             GivenFile(Quality.M4B);
 
             Missing().Should().BeEmpty();
+        }
+
+        [Test]
+        public void should_not_want_an_ebook_for_an_author_whose_profile_takes_only_audio()
+        {
+            // Wanting one would put every book of an audiobook library on the list, for a format its
+            // profile can never grab.
+            GivenBook(false, null);
+            GivenAudiobookOnlyProfile();
+            GivenFile(Quality.M4B);
+
+            Missing().Should().BeEmpty();
+        }
+
+        [Test]
+        public void should_want_an_audiobook_for_an_author_whose_profile_takes_only_audio()
+        {
+            GivenBook(false, null);
+            GivenAudiobookOnlyProfile();
+
+            Missing().Should().HaveCount(1);
         }
 
         [Test]
