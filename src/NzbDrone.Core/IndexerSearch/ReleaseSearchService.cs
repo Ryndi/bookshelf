@@ -90,6 +90,13 @@ namespace NzbDrone.Core.IndexerSearch
                 .Distinct(StringComparer.InvariantCultureIgnoreCase)
                 .ToList();
 
+            // A book left with no monitored edition is still searched for, on its own title, rather
+            // than being skipped without a word.
+            if (!titles.Any() && book.Title.IsNotNullOrWhiteSpace())
+            {
+                titles.Add(book.Title);
+            }
+
             foreach (var title in titles)
             {
                 var searchSpec = Get<BookSearchCriteria>(author, new List<Book> { book }, userInvokedSearch, interactiveSearch);

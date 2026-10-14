@@ -213,5 +213,20 @@ namespace NzbDrone.Core.Test.IndexerSearchTests
 
             criteria.Select(c => c.BookTitle).Should().BeEquivalentTo("A Book");
         }
+
+        [Test]
+        public async Task should_search_on_the_book_title_when_no_edition_is_monitored()
+        {
+            GivenEditions(("A Book: Unabridged", false));
+            _firstBook.Title = "A Book";
+
+            var allCriteria = WatchForSearchCriteria();
+
+            await Subject.BookSearch(_firstBook, false, true, false);
+
+            var criteria = allCriteria.OfType<BookSearchCriteria>().ToList();
+
+            criteria.Select(c => c.BookTitle).Should().BeEquivalentTo("A Book");
+        }
     }
 }
