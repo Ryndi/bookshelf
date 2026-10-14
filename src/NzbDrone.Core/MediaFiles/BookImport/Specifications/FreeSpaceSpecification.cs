@@ -38,7 +38,8 @@ namespace NzbDrone.Core.MediaFiles.BookImport.Specifications
                     return Decision.Accept();
                 }
 
-                var path = Directory.GetParent(item.Author.Path);
+                // Audiobooks can be kept under a root of their own, which may be another disk.
+                var path = Directory.GetParent(item.Author.PathForExtension(item.Path));
                 var freeSpace = _diskProvider.GetAvailableSpace(path.FullName);
 
                 if (!freeSpace.HasValue)

@@ -27,6 +27,7 @@ namespace NzbDrone.Core.Test.MediaFiles.BookImport.Specifications
 
             _author = Builder<Author>.CreateNew()
                                      .With(s => s.Path = Path.Combine(_rootFolder, "Alice in Chains"))
+                                     .With(s => s.AudiobookPath = null)
                                      .Build();
 
             _localTrack = new LocalBook
@@ -47,6 +48,21 @@ namespace NzbDrone.Core.Test.MediaFiles.BookImport.Specifications
             Mocker.GetMock<IDiskProvider>()
                   .Setup(s => s.GetAvailableSpace(It.IsAny<string>()))
                   .Returns(size);
+        }
+
+        [Test]
+        public void should_check_the_audiobook_root_for_an_audiobook_kept_under_its_own()
+        {
+            var audiobookRoot = @"D:\Audiobooks".AsOsAgnostic();
+            _author.AudiobookPath = Path.Combine(audiobookRoot, "Alice in Chains");
+
+            GivenFileSize(100.Megabytes());
+            GivenFreeSpace(1.Gigabytes());
+
+            Subject.IsSatisfiedBy(_localTrack, null);
+
+            Mocker.GetMock<IDiskProvider>()
+                  .Verify(v => v.GetAvailableSpace(audiobookRoot), Times.Once());
         }
 
         [Test]
