@@ -52,6 +52,25 @@ namespace NzbDrone.Core.Test.Profiles
         }
 
         [Test]
+        public void should_keep_the_cutoff_an_audiobook_only_profile_already_had()
+        {
+            // Written before audiobooks had a cutoff of their own, so it is held in Cutoff. Falling
+            // back to the first allowed quality would stop every upgrade at Unknown Audio.
+            var profile = GivenProfile(0, Quality.UnknownAudio, Quality.MP3, Quality.M4B, Quality.FLAC);
+            profile.Cutoff = Quality.M4B.Id;
+
+            profile.CutoffFor(Quality.MP3).Should().Be(Quality.M4B.Id);
+        }
+
+        [Test]
+        public void should_have_no_audiobook_cutoff_when_the_profile_takes_no_audiobooks()
+        {
+            var profile = GivenProfile(0, Quality.EPUB, Quality.AZW3);
+
+            profile.CutoffFor(true).Should().Be(0);
+        }
+
+        [Test]
         public void should_not_throw_when_the_profile_allows_nothing()
         {
             // The schema a new profile starts from allows nothing yet, and the API asks it for

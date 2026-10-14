@@ -37,9 +37,12 @@ namespace NzbDrone.Core.Profiles.Qualities
         }
 
         // Audiobooks and ebooks are never upgrades of each other, so each format stops at its
-        // own cutoff. Profiles written before AudiobookCutoff existed fall back to the first
-        // allowed audiobook quality, which stops at the first acceptable file rather than
-        // chasing an ebook cutoff an audiobook can never reach.
+        // own cutoff. A profile written before AudiobookCutoff existed keeps the cutoff it already
+        // had when that is an audiobook quality - an audiobook-only profile, which would otherwise
+        // stop upgrading at its lowest quality. Failing that it falls back to the first allowed
+        // audiobook quality, which stops at the first acceptable file rather than chasing an ebook
+        // cutoff an audiobook can never reach. A profile that takes no audiobook has no cutoff for
+        // one, rather than reporting an ebook quality as it.
         public int CutoffFor(Quality quality)
         {
             return CutoffFor(Quality.IsAudio(quality));
@@ -52,19 +55,24 @@ namespace NzbDrone.Core.Profiles.Qualities
                 return Cutoff;
             }
 
-            if (AudiobookCutoff > 0 && IsAllowedCutoff(AudiobookCutoff))
+            if (AudiobookCutoff > 0 && IsAllowedAudiobookCutoff(AudiobookCutoff))
             {
                 return AudiobookCutoff;
             }
 
-            // A profile that allows nothing has no quality to fall back to. That is the schema a
-            // new profile starts from, so report the stored value rather than throwing.
-            if (!Items.Any(q => q.Allowed))
+            if (IsAllowedAudiobookCutoff(Cutoff))
             {
-                return AudiobookCutoff;
+                return Cutoff;
             }
 
-            return FirstAllowedQuality(true).Id;
+            return Items.Where(q => q.Allowed)
+                .SelectMany(q => q.GetQualities())
+                .FirstOrDefault(q => Quality.IsAudio(q))?.Id ?? 0;
+        }
+
+        public bool Allows(bool audio)
+        {
+            return Items.Any(i => i.Allowed && i.GetQualities().Any(q => Quality.IsAudio(q) == audio));
         }
 
         public Quality FirstAllowedQuality(bool audio)
@@ -76,10 +84,13 @@ namespace NzbDrone.Core.Profiles.Qualities
             return first ?? FirstAllowedQuality();
         }
 
-        private bool IsAllowedCutoff(int id)
+        // A group counts as audio when any quality in it is, the same way the profile editor
+        // sorts it.
+        private bool IsAllowedAudiobookCutoff(int id)
         {
             return Items.Any(i => i.Allowed &&
-                                  ((i.Id > 0 && i.Id == id) || i.GetQualities().Any(q => q.Id == id)));
+                                  ((i.Id > 0 && i.Id == id) || i.GetQualities().Any(q => q.Id == id)) &&
+                                  i.GetQualities().Any(q => Quality.IsAudio(q)));
         }
 
         public Quality LastAllowedQuality()

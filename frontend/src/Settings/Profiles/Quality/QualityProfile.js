@@ -99,8 +99,12 @@ class QualityProfile extends Component {
                 return null;
               }
 
+              // A profile that takes no audiobook reports an audiobook cutoff of 0, which is not a
+              // quality to mark.
+              const hasAudiobookCutoff = audiobookCutoff > 0;
+
               if (item.quality) {
-                const isCutoff = upgradeAllowed && (item.quality.id === cutoff || item.quality.id === audiobookCutoff);
+                const isCutoff = upgradeAllowed && (item.quality.id === cutoff || (hasAudiobookCutoff && item.quality.id === audiobookCutoff));
 
                 return (
                   <Label
@@ -113,7 +117,7 @@ class QualityProfile extends Component {
                 );
               }
 
-              const isCutoff = upgradeAllowed && (item.id === cutoff || item.id === audiobookCutoff);
+              const isCutoff = upgradeAllowed && (item.id === cutoff || (hasAudiobookCutoff && item.id === audiobookCutoff));
 
               return (
                 <Tooltip

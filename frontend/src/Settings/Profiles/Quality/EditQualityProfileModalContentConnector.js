@@ -164,7 +164,15 @@ class EditQualityProfileModalContentConnector extends Component {
     }
 
     const cutoff = field.value;
-    const candidates = _.filter(qualityProfile.items.value, (i) => i.allowed && isAudioQualityItem(i) === audio);
+    const allowed = _.filter(qualityProfile.items.value, (i) => i.allowed);
+    let candidates = _.filter(allowed, (i) => isAudioQualityItem(i) === audio);
+
+    // The main cutoff is required. A profile that takes no ebook at all - an audiobook-only
+    // profile - keeps it on whatever it does take, as it did before audiobooks had a cutoff of
+    // their own. Left empty, the profile could not be saved, and its select is hidden.
+    if (!audio && !candidates.length) {
+      candidates = allowed;
+    }
 
     const cutoffItem = _.find(candidates, (i) => {
       if (!cutoff) {
