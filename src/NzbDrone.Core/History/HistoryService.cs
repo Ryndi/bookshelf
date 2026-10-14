@@ -20,6 +20,7 @@ namespace NzbDrone.Core.History
     {
         PagingSpec<EntityHistory> Paged(PagingSpec<EntityHistory> pagingSpec);
         EntityHistory MostRecentForBook(int bookId);
+        EntityHistory MostRecentForBook(int bookId, bool audio);
         EntityHistory MostRecentForDownloadId(string downloadId);
         EntityHistory Get(int historyId);
         List<EntityHistory> GetByAuthor(int authorId, EntityHistoryEventType? eventType);
@@ -59,6 +60,11 @@ namespace NzbDrone.Core.History
         public EntityHistory MostRecentForBook(int bookId)
         {
             return _historyRepository.MostRecentForBook(bookId);
+        }
+
+        public EntityHistory MostRecentForBook(int bookId, bool audio)
+        {
+            return _historyRepository.MostRecentForBook(bookId, audio);
         }
 
         public EntityHistory MostRecentForDownloadId(string downloadId)

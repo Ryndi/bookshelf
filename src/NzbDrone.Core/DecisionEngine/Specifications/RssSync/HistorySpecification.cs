@@ -45,11 +45,16 @@ namespace NzbDrone.Core.DecisionEngine.Specifications.RssSync
 
             var cdhEnabled = _configService.EnableCompletedDownloadHandling;
 
+            // Only a grab of the release's own format stands in its way. Judged by the latest grab of
+            // either, an audiobook grabbed after an ebook would hide the ebook still downloading, and a
+            // second ebook could be grabbed alongside it.
+            var isAudio = Quality.IsAudio(subject.ParsedBookInfo.Quality.Quality);
+
             _logger.Debug("Performing history status check on report");
             foreach (var book in subject.Books)
             {
                 _logger.Debug("Checking current status of book [{0}] in history", book.Id);
-                var mostRecent = _historyService.MostRecentForBook(book.Id);
+                var mostRecent = _historyService.MostRecentForBook(book.Id, isAudio);
 
                 if (mostRecent != null && mostRecent.EventType == EntityHistoryEventType.Grabbed)
                 {

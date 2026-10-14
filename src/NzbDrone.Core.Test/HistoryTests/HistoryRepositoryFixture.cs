@@ -1,3 +1,4 @@
+using System;
 using FizzWare.NBuilder;
 using FluentAssertions;
 using NUnit.Framework;
@@ -46,6 +47,28 @@ namespace NzbDrone.Core.Test.HistoryTests
             var downloadHistory = Subject.FindDownloadHistory(12, new QualityModel(Quality.MP3));
 
             downloadHistory.Should().HaveCount(1);
+        }
+
+        [Test]
+        public void should_find_the_most_recent_event_for_a_book_in_one_format()
+        {
+            var audiobookGrab = Builder<EntityHistory>.CreateNew()
+                .With(c => c.Quality = new QualityModel(Quality.M4B))
+                .With(c => c.BookId = 5)
+                .With(c => c.Date = DateTime.UtcNow.AddHours(-2))
+                .BuildNew();
+
+            var ebookGrab = Builder<EntityHistory>.CreateNew()
+                .With(c => c.Quality = new QualityModel(Quality.EPUB))
+                .With(c => c.BookId = 5)
+                .With(c => c.Date = DateTime.UtcNow.AddHours(-1))
+                .BuildNew();
+
+            Subject.Insert(audiobookGrab);
+            Subject.Insert(ebookGrab);
+
+            Subject.MostRecentForBook(5, true).Quality.Quality.Should().Be(Quality.M4B);
+            Subject.MostRecentForBook(5, false).Quality.Quality.Should().Be(Quality.EPUB);
         }
     }
 }

@@ -90,7 +90,7 @@ namespace NzbDrone.Core.Test.DecisionEngineTests.RssSync
 
         private void GivenMostRecentForBook(int bookId, string downloadId, QualityModel quality, DateTime date, EntityHistoryEventType eventType)
         {
-            Mocker.GetMock<IHistoryService>().Setup(s => s.MostRecentForBook(bookId))
+            Mocker.GetMock<IHistoryService>().Setup(s => s.MostRecentForBook(bookId, It.IsAny<bool>()))
                   .Returns(new EntityHistory { DownloadId = downloadId, Quality = quality, Date = date, EventType = eventType });
         }
 
@@ -110,8 +110,22 @@ namespace NzbDrone.Core.Test.DecisionEngineTests.RssSync
         [Test]
         public void should_return_true_if_latest_history_item_is_null()
         {
-            Mocker.GetMock<IHistoryService>().Setup(s => s.MostRecentForBook(It.IsAny<int>())).Returns((EntityHistory)null);
+            Mocker.GetMock<IHistoryService>().Setup(s => s.MostRecentForBook(It.IsAny<int>(), It.IsAny<bool>())).Returns((EntityHistory)null);
             _upgradeHistory.IsSatisfiedBy(_parseResultMulti, null).Accepted.Should().BeTrue();
+        }
+
+        [Test]
+        public void should_judge_a_release_by_the_latest_grab_of_its_own_format()
+        {
+            // The audiobook grabbed earlier still decides whether another audiobook is wanted, though
+            // an ebook has been grabbed since.
+            Mocker.GetMock<IHistoryService>().Setup(s => s.MostRecentForBook(FIRST_ALBUM_ID, true))
+                  .Returns(new EntityHistory { Quality = _notupgradableQuality, Date = DateTime.UtcNow, EventType = EntityHistoryEventType.Grabbed });
+
+            Mocker.GetMock<IHistoryService>().Setup(s => s.MostRecentForBook(FIRST_ALBUM_ID, false))
+                  .Returns(new EntityHistory { Quality = new QualityModel(Quality.EPUB), Date = DateTime.UtcNow, EventType = EntityHistoryEventType.Grabbed });
+
+            _upgradeHistory.IsSatisfiedBy(_parseResultSingle, null).Accepted.Should().BeFalse();
         }
 
         [Test]

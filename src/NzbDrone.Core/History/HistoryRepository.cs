@@ -11,6 +11,7 @@ namespace NzbDrone.Core.History
     public interface IHistoryRepository : IBasicRepository<EntityHistory>
     {
         EntityHistory MostRecentForBook(int bookId);
+        EntityHistory MostRecentForBook(int bookId, bool audio);
         EntityHistory MostRecentForDownloadId(string downloadId);
         List<EntityHistory> FindByDownloadId(string downloadId);
         List<EntityHistory> GetByAuthor(int authorId, EntityHistoryEventType? eventType);
@@ -30,6 +31,15 @@ namespace NzbDrone.Core.History
         public EntityHistory MostRecentForBook(int bookId)
         {
             return Query(h => h.BookId == bookId).MaxBy(h => h.Date);
+        }
+
+        // An ebook and an audiobook of a book are grabbed and imported side by side, so each format
+        // has a history of its own to go by.
+        public EntityHistory MostRecentForBook(int bookId, bool audio)
+        {
+            return Query(h => h.BookId == bookId)
+                .Where(h => Quality.IsAudio(h.Quality?.Quality) == audio)
+                .MaxBy(h => h.Date);
         }
 
         public EntityHistory MostRecentForDownloadId(string downloadId)
