@@ -7,6 +7,7 @@ interface CssExports {
   'bannerGrow': string;
   'bannerImage': string;
   'bookProgress': string;
+  'bookProgressByFormat': string;
   'cell': string;
   'checkInput': string;
   'genres': string;

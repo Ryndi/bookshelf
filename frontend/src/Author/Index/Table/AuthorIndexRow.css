@@ -79,6 +79,16 @@
   flex-direction: column;
 }
 
+/* A bar per format, stacked. Without the cell's own padding two fit in a row of the usual height. */
+.bookProgressByFormat {
+  composes: bookProgress;
+
+  gap: 2px;
+
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 .path {
   composes: cell;
 

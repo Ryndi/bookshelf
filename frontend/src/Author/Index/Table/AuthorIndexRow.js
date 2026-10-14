@@ -114,6 +114,9 @@ class AuthorIndexRow extends Component {
       availableBookCount = 0,
       bookFileCount = 0,
       totalBookCount = 0,
+      availableEbookCount = 0,
+      audiobookCount = 0,
+      availableAudiobookCount = 0,
       sizeOnDisk = 0
     } = statistics;
 
@@ -283,6 +286,50 @@ class AuthorIndexRow extends Component {
                   date={added}
                   component={VirtualTableRowCell}
                 />
+              );
+            }
+
+            // Once a book wants an audiobook each format gets its own bar, as under the posters. A
+            // single bar would read as complete while a whole format is still missing.
+            if (name === 'bookProgress' && audiobookCount) {
+              const formats = [
+                {
+                  key: 'ebook',
+                  label: translate('Ebook'),
+                  available: availableEbookCount,
+                  total: bookCount
+                },
+                {
+                  key: 'audiobook',
+                  label: translate('Audiobook'),
+                  available: availableAudiobookCount,
+                  total: audiobookCount
+                }
+              ];
+
+              return (
+                <VirtualTableRowCell
+                  key={name}
+                  className={styles.bookProgressByFormat}
+                >
+                  {
+                    formats.map(({ key, label, available, total }) => {
+                      const progress = total ? (available / total) * 100 : 100;
+
+                      return (
+                        <ProgressBar
+                          key={key}
+                          progress={progress}
+                          kind={getProgressBarKind(status, monitored, progress)}
+                          showText={true}
+                          text={`${label} ${available} / ${total}`}
+                          title={`${label}: ${available} / ${total}`}
+                          width={125}
+                        />
+                      );
+                    })
+                  }
+                </VirtualTableRowCell>
               );
             }
 
