@@ -84,6 +84,7 @@ class RootFolderSelectInputConnector extends Component {
 
   UNSAFE_componentWillMount() {
     const {
+      name,
       value,
       values,
       onChange
