@@ -118,34 +118,49 @@ namespace NzbDrone.Core.MediaFiles.BookImport
                     continue;
                 }
 
-                var edition = EnsureEditionAdded(decisionList);
-
-                if (edition == null)
-                {
-                    // failed to add the edition, carry on with next one
-                    continue;
-                }
-
                 // if (replaceExisting)
                 // {
                 //     RemoveExistingTrackFiles(author, book);
                 // }
 
-                // Make sure part numbers are populated for audiobooks
-                // If all audio files and all part numbers are zero, set them by filename order
-                if (decisionList.All(b => MediaFileExtensions.AudioExtensions.Contains(Path.GetExtension(b.Item.Path)) && b.Item.Part == 0))
+                // An ebook and an audiobook of the book can arrive together, and each belongs to an
+                // edition of its own format. Taken together, every file would be pointed at the first
+                // file's edition and only that edition monitored, and an ebook in the batch would stop
+                // the audiobook's parts being numbered - so each format is handled on its own.
+                var anyEdition = false;
+
+                foreach (var formatDecisions in decisionList.GroupBy(d => MediaFileExtensions.IsAudioFile(d.Item.Path)).Select(g => g.ToList()))
                 {
-                    var part = 1;
-                    foreach (var d in decisionList.OrderBy(x => PadNumbers.Replace(x.Item.Path)))
+                    var edition = EnsureEditionAdded(formatDecisions);
+
+                    if (edition == null)
                     {
-                        d.Item.Part = part++;
+                        // failed to add the edition, carry on with the next format
+                        continue;
                     }
+
+                    // Make sure part numbers are populated for audiobooks
+                    // If all audio files and all part numbers are zero, set them by filename order
+                    if (formatDecisions.All(b => MediaFileExtensions.AudioExtensions.Contains(Path.GetExtension(b.Item.Path)) && b.Item.Part == 0))
+                    {
+                        var part = 1;
+                        foreach (var d in formatDecisions.OrderBy(x => PadNumbers.Replace(x.Item.Path)))
+                        {
+                            d.Item.Part = part++;
+                        }
+                    }
+
+                    // set the correct release to be monitored before importing the new files
+                    var newRelease = formatDecisions.First().Item.Edition;
+                    _logger.Debug("Updating release to {0}", newRelease);
+                    book.Editions = _editionService.SetMonitored(newRelease);
+                    anyEdition = true;
                 }
 
-                // set the correct release to be monitored before importing the new files
-                var newRelease = bookDecision.First().Item.Edition;
-                _logger.Debug("Updating release to {0}", newRelease);
-                book.Editions = _editionService.SetMonitored(newRelease);
+                if (!anyEdition)
+                {
+                    continue;
+                }
 
                 // Publish book edited event.
                 // Deliberately don't put in the old book since we don't want to trigger an AuthorScan.
@@ -172,8 +187,12 @@ namespace NzbDrone.Core.MediaFiles.BookImport
 
                 try
                 {
-                    //check if already imported
-                    if (importResults.Where(r => r.ImportDecision.Item.Book.Id == localTrack.Book.Id).Any(r => r.ImportDecision.Item.Part == localTrack.Part))
+                    // check if already imported. An ebook and an audiobook of the book are not parts of
+                    // each other, so only a file of the same format can already hold this part.
+                    var isAudio = MediaFileExtensions.IsAudioFile(localTrack.Path);
+
+                    if (importResults.Where(r => r.ImportDecision.Item.Book.Id == localTrack.Book.Id && MediaFileExtensions.IsAudioFile(r.ImportDecision.Item.Path) == isAudio)
+                                     .Any(r => r.ImportDecision.Item.Part == localTrack.Part))
                     {
                         importResults.Add(new ImportResult(importDecision, "Book has already been imported"));
                         continue;
@@ -517,8 +536,8 @@ namespace NzbDrone.Core.MediaFiles.BookImport
             var edition = decisions.First().Item.Edition;
 
             // Identification hands back whatever it was given when it finds nothing to match, and that
-            // need not include an edition. With nothing to file the book against it is turned away here,
-            // rather than failing the import for every other book alongside it.
+            // need not include an edition. With nothing to file them against these files are turned away
+            // here, rather than failing the import for everything alongside them.
             if (edition == null)
             {
                 _logger.Warn("No edition of {0} to import against, skipping import", book);

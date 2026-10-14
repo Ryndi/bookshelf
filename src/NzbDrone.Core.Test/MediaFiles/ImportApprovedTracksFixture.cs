@@ -318,6 +318,113 @@ namespace NzbDrone.Core.Test.MediaFiles
             added.Should().OnlyContain(f => f.EditionId == saved.Id);
         }
 
+        private Edition GivenEdition(int id, string foreignEditionId, string format)
+        {
+            Mocker.GetMock<IEditionService>()
+                .Setup(s => s.SetMonitored(It.IsAny<Edition>()))
+                .Returns(new List<Edition>());
+
+            return Builder<Edition>.CreateNew()
+                .With(e => e.Id = id)
+                .With(e => e.ForeignEditionId = foreignEditionId)
+                .With(e => e.Format = format)
+                .With(e => e.Book = _approvedDecisions.First().Item.Book)
+                .With(e => e.Monitored = true)
+                .Build();
+        }
+
+        private ImportDecision<LocalBook> GivenFile(Edition edition, string name, Quality quality, int part = 1)
+        {
+            var template = _approvedDecisions.First().Item;
+
+            return new ImportDecision<LocalBook>(new LocalBook
+            {
+                Author = template.Author,
+                Book = template.Book,
+                Edition = edition,
+                Part = part,
+                Path = Path.Combine(template.Author.Path, name),
+                Quality = new QualityModel(quality),
+                FileTrackInfo = new ParsedTrackInfo()
+            });
+        }
+
+        [Test]
+        public void should_import_an_ebook_and_an_audiobook_of_the_same_book_together()
+        {
+            // An ebook is always part 1, and an audiobook in a single file is usually tagged track 1.
+            var ebook = GivenFile(GivenEdition(10, "ebook", "Kindle Edition"), "Book.epub", Quality.EPUB);
+            var audiobook = GivenFile(GivenEdition(11, "audiobook", "Audiobook"), "Book.m4b", Quality.M4B);
+
+            var result = Subject.Import(new List<ImportDecision<LocalBook>> { ebook, audiobook }, false);
+
+            result.Should().HaveCount(2);
+            result.Should().OnlyContain(r => r.Result == ImportResultType.Imported);
+        }
+
+        [Test]
+        public void should_file_each_format_against_its_own_edition()
+        {
+            var ebookEdition = GivenEdition(10, "ebook", "Kindle Edition");
+            var audiobookEdition = GivenEdition(11, "audiobook", "Audiobook");
+
+            // Matched against editions built from metadata, the way a fresh identification is. The
+            // audiobook is untagged, so it does not compete with the ebook for part 1.
+            var ebook = GivenFile(GivenEdition(0, "ebook", "Kindle Edition"), "Book.epub", Quality.EPUB);
+            var audiobook = GivenFile(GivenEdition(0, "audiobook", "Audiobook"), "Book.m4b", Quality.M4B, 0);
+
+            Mocker.GetMock<IEditionService>()
+                .Setup(s => s.GetEditionByForeignEditionId("ebook"))
+                .Returns(ebookEdition);
+
+            Mocker.GetMock<IEditionService>()
+                .Setup(s => s.GetEditionByForeignEditionId("audiobook"))
+                .Returns(audiobookEdition);
+
+            List<BookFile> added = null;
+            Mocker.GetMock<IMediaFileService>()
+                .Setup(s => s.AddMany(It.IsAny<List<BookFile>>()))
+                .Callback<List<BookFile>>(f => added = f);
+
+            Subject.Import(new List<ImportDecision<LocalBook>> { ebook, audiobook }, false);
+
+            added.Single(f => f.Path.EndsWith(".epub")).EditionId.Should().Be(ebookEdition.Id);
+            added.Single(f => f.Path.EndsWith(".m4b")).EditionId.Should().Be(audiobookEdition.Id);
+        }
+
+        [Test]
+        public void should_monitor_the_edition_of_each_format_it_imports()
+        {
+            var ebookEdition = GivenEdition(10, "ebook", "Kindle Edition");
+            var audiobookEdition = GivenEdition(11, "audiobook", "Audiobook");
+
+            var ebook = GivenFile(ebookEdition, "Book.epub", Quality.EPUB);
+            var audiobook = GivenFile(audiobookEdition, "Book.m4b", Quality.M4B, 0);
+
+            Subject.Import(new List<ImportDecision<LocalBook>> { ebook, audiobook }, false);
+
+            Mocker.GetMock<IEditionService>().Verify(v => v.SetMonitored(ebookEdition), Times.Once());
+            Mocker.GetMock<IEditionService>().Verify(v => v.SetMonitored(audiobookEdition), Times.Once());
+        }
+
+        [Test]
+        public void should_number_the_parts_of_an_audiobook_imported_alongside_its_ebook()
+        {
+            var ebook = GivenFile(GivenEdition(10, "ebook", "Kindle Edition"), "Book.epub", Quality.EPUB);
+            var audiobookEdition = GivenEdition(11, "audiobook", "Audiobook");
+
+            // Untagged files all read as part 0, so they are numbered by name.
+            var parts = Enumerable.Range(1, 3)
+                .Select(i => GivenFile(audiobookEdition, $"Book {i:00}.mp3", Quality.MP3, 0))
+                .ToList();
+
+            var result = Subject.Import(new List<ImportDecision<LocalBook>> { ebook }.Concat(parts).ToList(), false);
+
+            result.Should().HaveCount(4);
+            result.Should().OnlyContain(r => r.Result == ImportResultType.Imported);
+            parts.Select(p => p.Item.Part).Should().BeEquivalentTo(new[] { 1, 2, 3 });
+        }
+
         [Test]
         public void should_import_the_rest_of_the_batch_when_one_book_has_no_edition()
         {
