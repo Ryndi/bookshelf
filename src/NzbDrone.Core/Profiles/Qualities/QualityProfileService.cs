@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NLog;
@@ -22,6 +23,7 @@ namespace NzbDrone.Core.Profiles.Qualities
         QualityProfile Get(int id);
         bool Exists(int id);
         QualityProfile GetDefaultProfile(string name, Quality cutoff = null, params Quality[] allowed);
+        int DefaultAudiobookProfileId(int mainProfileId);
     }
 
     public class QualityProfileService : IQualityProfileService,
@@ -83,6 +85,25 @@ namespace NzbDrone.Core.Profiles.Qualities
         public QualityProfile Get(int id)
         {
             return _profileRepository.Get(id);
+        }
+
+        // The profile audiobooks get when they are switched on without one being picked: the main
+        // profile when it takes audio, as no audiobook profile has always meant, otherwise the first
+        // by name that does - the one the author editor starts on. Zero when no profile takes audio.
+        public int DefaultAudiobookProfileId(int mainProfileId)
+        {
+            var profiles = All();
+            var main = profiles.SingleOrDefault(p => p.Id == mainProfileId);
+
+            if (main != null && main.Allows(true))
+            {
+                return main.Id;
+            }
+
+            return profiles.Where(p => p.Allows(true))
+                           .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
+                           .Select(p => p.Id)
+                           .FirstOrDefault();
         }
 
         public bool Exists(int id)

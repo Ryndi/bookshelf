@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using FizzWare.NBuilder;
+using FluentAssertions;
 using Moq;
 using NUnit.Framework;
 using NzbDrone.Core.Books;
@@ -8,6 +9,7 @@ using NzbDrone.Core.CustomFormats;
 using NzbDrone.Core.ImportLists;
 using NzbDrone.Core.Lifecycle;
 using NzbDrone.Core.Profiles.Qualities;
+using NzbDrone.Core.Qualities;
 using NzbDrone.Core.RootFolders;
 using NzbDrone.Core.Test.Framework;
 
@@ -17,6 +19,42 @@ namespace NzbDrone.Core.Test.Profiles
 
     public class QualityProfileServiceFixture : CoreTest<QualityProfileService>
     {
+        private void GivenProfiles(params QualityProfile[] profiles)
+        {
+            Mocker.GetMock<IProfileRepository>()
+                  .Setup(s => s.All())
+                  .Returns(profiles.ToList());
+        }
+
+        private static QualityProfile GivenProfile(int id, string name, params Quality[] allowed)
+        {
+            return new QualityProfile { Id = id, Name = name, Items = Qualities.QualityFixture.GetDefaultQualities(allowed) };
+        }
+
+        [Test]
+        public void should_default_audiobooks_to_the_main_profile_when_it_takes_audio()
+        {
+            GivenProfiles(GivenProfile(1, "Any", Quality.EPUB, Quality.MP3), GivenProfile(2, "Spoken", Quality.MP3));
+
+            Subject.DefaultAudiobookProfileId(1).Should().Be(1);
+        }
+
+        [Test]
+        public void should_default_audiobooks_to_the_first_profile_by_name_that_takes_audio()
+        {
+            GivenProfiles(GivenProfile(1, "eBook", Quality.EPUB), GivenProfile(2, "Spoken", Quality.MP3), GivenProfile(3, "Audio Best", Quality.FLAC));
+
+            Subject.DefaultAudiobookProfileId(1).Should().Be(3);
+        }
+
+        [Test]
+        public void should_have_no_default_audiobook_profile_when_none_takes_audio()
+        {
+            GivenProfiles(GivenProfile(1, "eBook", Quality.EPUB));
+
+            Subject.DefaultAudiobookProfileId(1).Should().Be(0);
+        }
+
         [Test]
         public void init_should_add_default_profiles()
         {

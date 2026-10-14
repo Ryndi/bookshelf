@@ -5,6 +5,7 @@ using NzbDrone.Common.Extensions;
 using NzbDrone.Core.Books;
 using NzbDrone.Core.Books.Commands;
 using NzbDrone.Core.Messaging.Commands;
+using NzbDrone.Core.Profiles.Qualities;
 using Readarr.Http;
 
 namespace Readarr.Api.V1.Author
@@ -14,11 +15,13 @@ namespace Readarr.Api.V1.Author
     {
         private readonly IAuthorService _authorService;
         private readonly IManageCommandQueue _commandQueueManager;
+        private readonly IQualityProfileService _qualityProfileService;
 
-        public AuthorEditorController(IAuthorService authorService, IManageCommandQueue commandQueueManager)
+        public AuthorEditorController(IAuthorService authorService, IManageCommandQueue commandQueueManager, IQualityProfileService qualityProfileService)
         {
             _authorService = authorService;
             _commandQueueManager = commandQueueManager;
+            _qualityProfileService = qualityProfileService;
         }
 
         [HttpPut]
@@ -93,6 +96,14 @@ namespace Readarr.Api.V1.Author
                             author.Tags = new HashSet<int>(newTags);
                             break;
                     }
+                }
+
+                // The editor saves each setting on its own, so audiobooks can be switched on here
+                // without a profile picked for them. Left like that they are judged by the main
+                // profile, which often takes no audio at all - so they get one that takes audio.
+                if (author.SearchAudiobooks && author.AudiobookQualityProfileId == 0)
+                {
+                    author.AudiobookQualityProfileId = _qualityProfileService.DefaultAudiobookProfileId(author.QualityProfileId);
                 }
             }
 
