@@ -5,6 +5,7 @@ using Moq;
 using NUnit.Framework;
 using NzbDrone.Core.Books;
 using NzbDrone.Core.Organizer;
+using NzbDrone.Core.RootFolders;
 using NzbDrone.Core.Test.Framework;
 using NzbDrone.Test.Common;
 
@@ -54,6 +55,37 @@ namespace NzbDrone.Core.Test.BookTests
 
             Subject.BuildAudiobookPath(_author)
                 .Should().Be(Path.Combine(@"C:\Audiobooks".AsOsAgnostic(), "Author, Some"));
+        }
+
+        [Test]
+        public void should_keep_the_folder_the_author_already_has()
+        {
+            // The author has been renamed since, but the audiobooks already on disk stay where they are.
+            Mocker.GetMock<IBuildFileNames>()
+                .Setup(s => s.GetAuthorFolder(It.IsAny<Author>(), null))
+                .Returns("Renamed Author");
+
+            Mocker.GetMock<IRootFolderService>()
+                .Setup(s => s.GetBestRootFolderPath(It.IsAny<string>()))
+                .Returns(@"C:\Audiobooks".AsOsAgnostic());
+
+            _author.AudiobookRootFolderPath = @"C:\Audiobooks".AsOsAgnostic();
+
+            Subject.BuildAudiobookPath(_author, Path.Combine(@"C:\Audiobooks".AsOsAgnostic(), "Some Author"))
+                .Should().Be(Path.Combine(@"C:\Audiobooks".AsOsAgnostic(), "Some Author"));
+        }
+
+        [Test]
+        public void should_keep_the_folder_name_under_a_new_root()
+        {
+            Mocker.GetMock<IRootFolderService>()
+                .Setup(s => s.GetBestRootFolderPath(It.IsAny<string>()))
+                .Returns(@"C:\Audiobooks".AsOsAgnostic());
+
+            _author.AudiobookRootFolderPath = @"D:\Audiobooks".AsOsAgnostic();
+
+            Subject.BuildAudiobookPath(_author, Path.Combine(@"C:\Audiobooks".AsOsAgnostic(), "Some Author"))
+                .Should().Be(Path.Combine(@"D:\Audiobooks".AsOsAgnostic(), "Some Author"));
         }
     }
 }

@@ -231,7 +231,7 @@ namespace NzbDrone.Core.Books
             // Never update AddOptions when updating an author, keep it the same as the existing stored author.
             author.AddOptions = storedAuthor.AddOptions;
 
-            author.AudiobookPath = _authorPathBuilder.BuildAudiobookPath(author);
+            author.AudiobookPath = _authorPathBuilder.BuildAudiobookPath(author, storedAuthor.AudiobookPath);
 
             var updatedAuthor = _authorRepository.Update(author);
             _eventAggregator.PublishEvent(new AuthorEditedEvent(updatedAuthor, storedAuthor));
@@ -259,7 +259,7 @@ namespace NzbDrone.Core.Books
                     _logger.Trace("Not changing path for: {0}", s.Name);
                 }
 
-                s.AudiobookPath = _authorPathBuilder.BuildAudiobookPath(s);
+                s.AudiobookPath = _authorPathBuilder.BuildAudiobookPath(s, s.AudiobookPath);
             }
 
             _authorRepository.UpdateMany(author);

@@ -9,7 +9,7 @@ namespace NzbDrone.Core.Books
     public interface IBuildAuthorPaths
     {
         string BuildPath(Author author, bool useExistingRelativeFolder);
-        string BuildAudiobookPath(Author author);
+        string BuildAudiobookPath(Author author, string existingAudiobookPath = null);
     }
 
     public class AuthorPathBuilder : IBuildAuthorPaths
@@ -40,12 +40,25 @@ namespace NzbDrone.Core.Books
         }
 
         // Uses the same author folder naming as the main path, so audiobooks are laid out under
-        // their root exactly the way ebooks are under theirs.
-        public string BuildAudiobookPath(Author author)
+        // their root exactly the way ebooks are under theirs. A folder already in use keeps its
+        // name - under the new root, if that changed - the way the main path does. Audiobooks are
+        // never moved, so renaming the author or changing the folder format would otherwise send
+        // new audiobooks to a second folder beside the first.
+        public string BuildAudiobookPath(Author author, string existingAudiobookPath = null)
         {
             if (author.AudiobookRootFolderPath.IsNullOrWhiteSpace())
             {
                 return null;
+            }
+
+            if (existingAudiobookPath.IsNotNullOrWhiteSpace())
+            {
+                var existingRoot = _rootFolderService.GetBestRootFolderPath(existingAudiobookPath);
+
+                if (existingRoot.IsNotNullOrWhiteSpace() && existingRoot.IsParentPath(existingAudiobookPath))
+                {
+                    return Path.Combine(author.AudiobookRootFolderPath, existingRoot.GetRelativePath(existingAudiobookPath));
+                }
             }
 
             return Path.Combine(author.AudiobookRootFolderPath, _fileNameBuilder.GetAuthorFolder(author));
