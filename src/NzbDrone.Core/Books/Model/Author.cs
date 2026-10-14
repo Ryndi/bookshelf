@@ -87,6 +87,19 @@ namespace NzbDrone.Core.Books
             return ProfileFor(quality?.Quality);
         }
 
+        // Ebooks are wanted whenever the author's profile takes one. Audiobooks are wanted when
+        // switched on for the book or the author - or when the profile takes nothing but audio,
+        // which is how an audiobook library was set up before audiobooks had a switch of their own.
+        public bool WantsEbooks()
+        {
+            return QualityProfile?.Value?.Allows(false) ?? true;
+        }
+
+        public bool WantsAudiobooks(Book book)
+        {
+            return (book?.SearchAudiobooks ?? SearchAudiobooks) || !WantsEbooks();
+        }
+
         // Audiobooks go to their own folder when one is configured, so the two formats can live
         // under different root folders. Falling back to Path keeps existing libraries in place.
         public string PathFor(Quality quality)
