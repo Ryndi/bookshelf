@@ -11,7 +11,11 @@ import BookDetailsHeader from './BookDetailsHeader';
 const selectOverview = createSelector(
   (state) => state.editions,
   (editions) => {
-    const monitored = editions.items.find((e) => e.monitored === true);
+    // A book can monitor an ebook and an audiobook edition. The ebook stands in for the book, the
+    // same way the server picks one.
+    const monitored = editions.items.find((e) => e.monitored === true && !e.isAudiobook) ||
+      editions.items.find((e) => e.monitored === true);
+
     return monitored?.overview;
   }
 );
