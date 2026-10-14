@@ -63,9 +63,16 @@ class AddNewBookModalContentConnector extends Component {
       monitor,
       monitorNewItems,
       qualityProfileId,
+      searchAudiobooks,
+      audiobookQualityProfileId,
+      audiobookRootFolderPath,
       metadataProfileId,
       tags
     } = this.props;
+
+    // The dialog offers the audiobook settings for an author being added with the book, and they
+    // are only sent when the toggle is on - the same as adding the author on their own.
+    const wantsAudiobooks = Boolean(searchAudiobooks && searchAudiobooks.value);
 
     this.props.addBook({
       foreignBookId,
@@ -73,6 +80,9 @@ class AddNewBookModalContentConnector extends Component {
       monitor: monitor.value,
       monitorNewItems: monitorNewItems.value,
       qualityProfileId: qualityProfileId.value,
+      searchAudiobooks: wantsAudiobooks,
+      audiobookQualityProfileId: wantsAudiobooks && audiobookQualityProfileId ? audiobookQualityProfileId.value : 0,
+      audiobookRootFolderPath: wantsAudiobooks && audiobookRootFolderPath ? audiobookRootFolderPath.value : '',
       metadataProfileId: metadataProfileId.value,
       tags: tags.value,
       searchForNewBook
@@ -100,6 +110,9 @@ AddNewBookModalContentConnector.propTypes = {
   monitor: PropTypes.object.isRequired,
   monitorNewItems: PropTypes.object.isRequired,
   qualityProfileId: PropTypes.object,
+  searchAudiobooks: PropTypes.object,
+  audiobookQualityProfileId: PropTypes.object,
+  audiobookRootFolderPath: PropTypes.object,
   metadataProfileId: PropTypes.object,
   tags: PropTypes.object.isRequired,
   onModalClose: PropTypes.func.isRequired,
