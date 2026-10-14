@@ -72,7 +72,10 @@ class EditBookModalContent extends Component {
       ? String(searchAudiobooks.value)
       : '';
 
-    const hasFile = statistics ? statistics.bookFileCount > 0 : false;
+    // Each picker locks on a file of its own format. Locked on any file, holding the ebook would
+    // stop the audiobook edition - whose title the audiobook search uses - from being chosen.
+    const hasEbookFile = statistics ? statistics.availableEbookCount > 0 : false;
+    const hasAudiobookFile = statistics ? statistics.availableAudiobookCount > 0 : false;
     const errorMessage = getErrorMessage(error, 'Unable to load editions');
 
     // A book monitors one edition per format, so each format gets its own picker.
@@ -158,7 +161,7 @@ class EditBookModalContent extends Component {
                     type={inputTypes.BOOK_EDITION_SELECT}
                     name="editions"
                     helpText={translate('EditionsHelpText')}
-                    isDisabled={anyEditionOk.value && hasFile}
+                    isDisabled={anyEditionOk.value && hasEbookFile}
                     bookEditions={editions}
                     isAudiobook={false}
                     onChange={onInputChange}
@@ -177,7 +180,7 @@ class EditBookModalContent extends Component {
                     type={inputTypes.BOOK_EDITION_SELECT}
                     name="editions"
                     helpText={translate('EditionsHelpText')}
-                    isDisabled={anyEditionOk.value && hasFile}
+                    isDisabled={anyEditionOk.value && hasAudiobookFile}
                     bookEditions={editions}
                     isAudiobook={true}
                     onChange={onInputChange}
