@@ -6,7 +6,7 @@ import { createSelector } from 'reselect';
 import { fetchQualityProfileSchema, saveQualityProfile, setQualityProfileValue } from 'Store/Actions/settingsActions';
 import createProfileInUseSelector from 'Store/Selectors/createProfileInUseSelector';
 import createProviderSettingsSelector from 'Store/Selectors/createProviderSettingsSelector';
-import isAudioQualityItem from 'Utilities/Quality/isAudioQualityItem';
+import qualityItemHasFormat from 'Utilities/Quality/qualityItemHasFormat';
 import EditQualityProfileModalContent from './EditQualityProfileModalContent';
 
 function getQualityItemGroupId(qualityProfile) {
@@ -44,7 +44,7 @@ function createQualitiesSelector(audio) {
       return _.reduceRight(items.value, (result, item) => {
         const { allowed, id, name, quality } = item;
 
-        if (allowed && isAudioQualityItem(item) === audio) {
+        if (allowed && qualityItemHasFormat(item, audio)) {
           if (id) {
             result.push({
               key: id,
@@ -165,7 +165,7 @@ class EditQualityProfileModalContentConnector extends Component {
 
     const cutoff = field.value;
     const allowed = _.filter(qualityProfile.items.value, (i) => i.allowed);
-    let candidates = _.filter(allowed, (i) => isAudioQualityItem(i) === audio);
+    let candidates = _.filter(allowed, (i) => qualityItemHasFormat(i, audio));
 
     // The main cutoff is required. A profile that takes no ebook at all - an audiobook-only
     // profile - keeps it on whatever it does take, as it did before audiobooks had a cutoff of
