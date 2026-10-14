@@ -7,6 +7,7 @@ using Moq;
 using NUnit.Framework;
 using NzbDrone.Common.Disk;
 using NzbDrone.Core.Books;
+using NzbDrone.Core.Books.Calibre;
 using NzbDrone.Core.Datastore;
 using NzbDrone.Core.MediaFiles;
 using NzbDrone.Core.Parser.Model;
@@ -177,6 +178,11 @@ namespace NzbDrone.Core.Test.MediaFiles
         [Test]
         public void should_reuse_calibre_id_from_file_of_the_other_type()
         {
+            // Both formats go into the same Calibre library, which keeps them under one book.
+            Mocker.GetMock<IRootFolderService>()
+                .Setup(c => c.GetBestRootFolder(It.IsAny<string>()))
+                .Returns(new RootFolder { IsCalibreLibrary = true, CalibreSettings = new CalibreSettings() });
+
             GivenBookWithFiles("book.epub");
             _localTrack.Book.BookFiles.Value[0].CalibreId = 42;
             _trackFile.CalibreId = 0;
@@ -185,6 +191,42 @@ namespace NzbDrone.Core.Test.MediaFiles
             Subject.UpgradeBookFile(_trackFile, _localTrack);
 
             _trackFile.CalibreId.Should().Be(42);
+        }
+
+        [Test]
+        public void should_not_give_a_file_kept_outside_calibre_the_calibre_id_of_the_other_type()
+        {
+            // The ebook is in Calibre but the audiobook goes to an ordinary folder. Linked to the
+            // Calibre book it would be skipped by renaming and have its tags sent to Calibre.
+            GivenBookWithFiles("book.epub");
+            _localTrack.Book.BookFiles.Value[0].CalibreId = 42;
+            _trackFile.CalibreId = 0;
+            _trackFile.Path = Path.Combine(_rootPath, "book.m4b");
+
+            Subject.UpgradeBookFile(_trackFile, _localTrack);
+
+            _trackFile.CalibreId.Should().Be(0);
+        }
+
+        [Test]
+        public void should_replace_an_audiobook_kept_outside_the_current_audiobook_root()
+        {
+            // Imported before the author's audiobooks had a root of their own, so it still sits in
+            // the ebook folder while new audiobooks go to the audiobook one.
+            var audiobookPath = @"C:\Test\Audiobooks\Author".AsOsAgnostic();
+
+            _localTrack.Author.AudiobookPath = audiobookPath;
+            GivenBookWithFiles("book.m4b");
+            _trackFile.Path = Path.Combine(audiobookPath, "book.m4b");
+
+            Mocker.GetMock<IRootFolderService>()
+                .Setup(c => c.GetBestRootFolderPath(It.IsAny<string>()))
+                .Returns(@"C:\Test\Music".AsOsAgnostic());
+
+            var oldFiles = Subject.UpgradeBookFile(_trackFile, _localTrack).OldFiles;
+
+            oldFiles.Should().HaveCount(1);
+            Mocker.GetMock<IRecycleBinProvider>().Verify(v => v.DeleteFile(Path.Combine(_rootPath, "book.m4b"), "Author"), Times.Once());
         }
 
         [Test]

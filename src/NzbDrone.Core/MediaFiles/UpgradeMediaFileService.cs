@@ -69,10 +69,12 @@ namespace NzbDrone.Core.MediaFiles
             var settings = rootFolder?.CalibreSettings;
 
             // Calibre keeps every format under a single book, so keep the link even when the only
-            // files we have for this book are of the other type.
+            // files we have for this book are of the other type - but only for a file going into
+            // Calibre. One kept in an ordinary folder would be skipped by renaming and have its tags
+            // sent to a Calibre it is not in.
             var existingCalibreId = allFiles.FirstOrDefault(f => f.CalibreId > 0)?.CalibreId ?? 0;
 
-            if (existingCalibreId > 0)
+            if (isCalibre && existingCalibreId > 0)
             {
                 bookFile.CalibreId = existingCalibreId;
             }
@@ -86,7 +88,7 @@ namespace NzbDrone.Core.MediaFiles
             foreach (var file in existingFiles)
             {
                 var bookFilePath = file.Path;
-                var subfolder = rootFolderPath.GetRelativePath(_diskProvider.GetParentFolder(bookFilePath));
+                var subfolder = GetRecycleSubfolder(rootFolderPath, bookFilePath);
 
                 if (_diskProvider.FileExists(bookFilePath))
                 {
@@ -135,6 +137,23 @@ namespace NzbDrone.Core.MediaFiles
             }
 
             return moveFileResult;
+        }
+
+        // The recycle bin keeps a file's folders relative to the root holding it. A file of this
+        // format can sit outside the root the format uses now - imported before audiobooks had a
+        // root of their own, or left where it was when that root changed - so the root is the one
+        // that actually holds it, and a file outside every root keeps no folders. Taken from the
+        // destination alone, such a file could never be upgraded.
+        private string GetRecycleSubfolder(string rootFolderPath, string path)
+        {
+            var folder = _diskProvider.GetParentFolder(path);
+
+            if (!rootFolderPath.IsParentPath(folder))
+            {
+                rootFolderPath = _rootFolderService.GetBestRootFolderPath(path);
+            }
+
+            return rootFolderPath.IsNotNullOrWhiteSpace() && rootFolderPath.IsParentPath(folder) ? rootFolderPath.GetRelativePath(folder) : string.Empty;
         }
     }
 }
