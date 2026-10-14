@@ -33,7 +33,13 @@ function calculateColumnWidth(width, posterSize, isSmallScreen) {
   return Math.floor(width / (columns + additionalColumnCount[posterSize]));
 }
 
-function calculateRowHeight(posterHeight, sortKey, isSmallScreen, posterOptions) {
+// An author with a book wanting an audiobook gets a progress bar per format, and every row is
+// the same height, so the rows need room for the second bar once any author shown has one.
+function hasProgressBarPerFormat(items) {
+  return items.some((item) => item.statistics && item.statistics.audiobookCount > 0);
+}
+
+function calculateRowHeight(posterHeight, sortKey, isSmallScreen, posterOptions, progressBarPerFormat) {
   const {
     detailedProgressBar,
     showTitle,
@@ -42,13 +48,19 @@ function calculateRowHeight(posterHeight, sortKey, isSmallScreen, posterOptions)
   } = posterOptions;
 
   const nextAiringHeight = 19;
+  const barHeight = detailedProgressBar ? detailedProgressBarHeight : progressBarHeight;
 
   const heights = [
     posterHeight,
-    detailedProgressBar ? detailedProgressBarHeight : progressBarHeight,
+    barHeight,
     nextAiringHeight,
     isSmallScreen ? columnPaddingSmallScreen : columnPadding
   ];
+
+  if (progressBarPerFormat) {
+    // The bars are stacked 2px apart.
+    heights.push(barHeight + 2);
+  }
 
   if (showTitle !== 'no') {
     heights.push(19);
@@ -130,7 +142,8 @@ class AuthorIndexPosters extends Component {
     } = this.state;
 
     if (prevProps.sortKey !== sortKey ||
-        prevProps.posterOptions !== posterOptions) {
+        prevProps.posterOptions !== posterOptions ||
+        (prevProps.items !== items && hasProgressBarPerFormat(prevProps.items) !== hasProgressBarPerFormat(items))) {
       this.calculateGrid(width, isSmallScreen);
     }
 
@@ -175,6 +188,7 @@ class AuthorIndexPosters extends Component {
 
   calculateGrid = (width = this.state.width, isSmallScreen) => {
     const {
+      items,
       sortKey,
       posterOptions
     } = this.props;
@@ -183,7 +197,7 @@ class AuthorIndexPosters extends Component {
     const columnCount = Math.max(Math.floor(width / columnWidth), 1);
     const posterWidth = columnWidth - this._padding * 2;
     const posterHeight = calculatePosterHeight(posterWidth);
-    const rowHeight = calculateRowHeight(posterHeight, sortKey, isSmallScreen, posterOptions);
+    const rowHeight = calculateRowHeight(posterHeight, sortKey, isSmallScreen, posterOptions, hasProgressBarPerFormat(items));
 
     this.setState({
       width,

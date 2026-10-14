@@ -29,16 +29,29 @@ function calculatePosterWidth(posterSize, isSmallScreen) {
   return Math.floor(maxiumPosterWidth * 0.5);
 }
 
-function calculateRowHeight(posterHeight, sortKey, isSmallScreen, overviewOptions) {
+// An author with a book wanting an audiobook gets a progress bar per format, and every row is
+// the same height, so the rows need room for the second bar once any author shown has one.
+function hasProgressBarPerFormat(items) {
+  return items.some((item) => item.statistics && item.statistics.audiobookCount > 0);
+}
+
+function calculateRowHeight(posterHeight, sortKey, isSmallScreen, overviewOptions, progressBarPerFormat) {
   const {
     detailedProgressBar
   } = overviewOptions;
 
+  const barHeight = detailedProgressBar ? detailedProgressBarHeight : progressBarHeight;
+
   const heights = [
     posterHeight,
-    detailedProgressBar ? detailedProgressBarHeight : progressBarHeight,
+    barHeight,
     isSmallScreen ? columnPaddingSmallScreen : columnPadding
   ];
+
+  if (progressBarPerFormat) {
+    // The bars are stacked 2px apart.
+    heights.push(barHeight + 2);
+  }
 
   return heights.reduce((acc, height) => acc + height, 0);
 }
@@ -85,7 +98,8 @@ class AuthorIndexOverviews extends Component {
     } = this.state;
 
     if (prevProps.sortKey !== sortKey ||
-        prevProps.overviewOptions !== overviewOptions) {
+        prevProps.overviewOptions !== overviewOptions ||
+        (prevProps.items !== items && hasProgressBarPerFormat(prevProps.items) !== hasProgressBarPerFormat(items))) {
       this.calculateGrid();
     }
 
@@ -127,13 +141,14 @@ class AuthorIndexOverviews extends Component {
 
   calculateGrid = (width = this.state.width, isSmallScreen) => {
     const {
+      items,
       sortKey,
       overviewOptions
     } = this.props;
 
     const posterWidth = calculatePosterWidth(overviewOptions.size, isSmallScreen);
     const posterHeight = calculatePosterHeight(posterWidth);
-    const rowHeight = calculateRowHeight(posterHeight, sortKey, isSmallScreen, overviewOptions);
+    const rowHeight = calculateRowHeight(posterHeight, sortKey, isSmallScreen, overviewOptions, hasProgressBarPerFormat(items));
 
     this.setState({
       width,
