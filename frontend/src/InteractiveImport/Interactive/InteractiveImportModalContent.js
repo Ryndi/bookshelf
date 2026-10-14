@@ -121,6 +121,12 @@ const replaceExistingFilesOptions = {
   DELETE: 'delete'
 };
 
+// The files of one book in one format belong to a single edition. An ebook and an audiobook of
+// the same book each have an edition of their own, so the two are grouped apart.
+function getEditionGroupKey(item) {
+  return `${item.book.id}-${isAudioQuality(item.quality) ? 'audiobook' : 'ebook'}`;
+}
+
 class InteractiveImportModalContent extends Component {
 
   //
@@ -148,11 +154,9 @@ class InteractiveImportModalContent extends Component {
     const selectedItems = _.filter(this.props.items, (x) => _.includes(selectedIds, x.id));
 
     const inconsistent = _(selectedItems)
-      .map((x) => ({ bookId: x.book ? x.book.id : 0, foreignEditionId: x.ForeignEditionId }))
-      .groupBy('bookId')
-      .mapValues((book) => _(book).groupBy((x) => x.foreignEditionId).values().value().length)
-      .values()
-      .some((x) => x !== undefined && x > 1);
+      .filter((x) => x.book)
+      .groupBy(getEditionGroupKey)
+      .some((group) => _.uniqBy(group, 'foreignEditionId').length > 1);
 
     if (inconsistent !== this.state.inconsistentBookReleases) {
       this.setState({ inconsistentBookReleases: inconsistent });
@@ -324,8 +328,26 @@ class InteractiveImportModalContent extends Component {
 
     const selectedIds = this.getSelectedIds();
     const selectedItem = selectedIds.length ? _.find(items, { id: selectedIds[0] }) : null;
-    const importIdsByBook = _.chain(items).filter((x) => x.book).groupBy((x) => x.book.id).mapValues((x) => x.map((y) => y.id)).value();
-    const editions = _.chain(items).filter((x) => x.book).keyBy((x) => x.book.id).mapValues((x) => ({ matchedEditionId: x.foreignEditionId, book: x.book })).values().value();
+    // An edition is picked for each book and format being imported, and applies to those files
+    // alone. Picked per book, choosing an audiobook edition would move the ebook onto it as well.
+    const editionGroups = _.chain(items)
+      .filter((x) => x.book)
+      .groupBy(getEditionGroupKey)
+      .map((group, key) => ({
+        key,
+        ids: group.map((x) => x.id),
+        book: group[0].book,
+        isAudiobook: isAudioQuality(group[0].quality),
+        matchedEditionId: group[0].foreignEditionId
+      }))
+      .value();
+
+    // Naming the format only tells the rows apart when a book is being imported in both.
+    const groupsPerBook = _.countBy(editionGroups, (x) => x.book.id);
+
+    editionGroups.forEach((x) => {
+      x.showFormat = groupsPerBook[x.book.id] > 1;
+    });
     const errorMessage = getErrorMessage(error, 'Unable to load manual import items');
 
     const bulkSelectOptions = [
@@ -508,6 +530,11 @@ class InteractiveImportModalContent extends Component {
                 <span className={styles.errorMessage}>{interactiveImportErrorMessage}</span>
             }
 
+            {
+              !interactiveImportErrorMessage && inconsistentBookReleases &&
+                <span className={styles.errorMessage}>{translate('ManualImportInconsistentEditions')}</span>
+            }
+
             <Button
               kind={kinds.SUCCESS}
               isDisabled={isSaving || !selectedIds.length || !!invalidRowsSelected.length || inconsistentBookReleases}
@@ -533,8 +560,7 @@ class InteractiveImportModalContent extends Component {
 
         <SelectEditionModal
           isOpen={selectModalOpen === EDITION}
-          importIdsByBook={importIdsByBook}
-          books={editions}
+          books={editionGroups}
           onModalClose={this.onSelectModalClose}
         />
 

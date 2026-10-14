@@ -6,6 +6,7 @@ import TableRowCell from 'Components/Table/Cells/TableRowCell';
 import TableRow from 'Components/Table/TableRow';
 import { inputTypes } from 'Helpers/Props';
 import titleCase from 'Utilities/String/titleCase';
+import translate from 'Utilities/String/translate';
 
 class SelectEditionRow extends Component {
 
@@ -13,7 +14,7 @@ class SelectEditionRow extends Component {
   // Listeners
 
   onInputChange = ({ name, value }) => {
-    this.props.onEditionSelect(parseInt(name), value);
+    this.props.onEditionSelect(name, value);
   };
 
   //
@@ -21,7 +22,9 @@ class SelectEditionRow extends Component {
 
   render() {
     const {
-      id,
+      groupKey,
+      isAudiobook,
+      showFormat,
       matchedEditionId,
       title,
       disambiguation,
@@ -29,9 +32,13 @@ class SelectEditionRow extends Component {
       columns
     } = this.props;
 
-    const extendedTitle = disambiguation ? `${title} (${disambiguation})` : title;
+    let extendedTitle = disambiguation ? `${title} (${disambiguation})` : title;
 
-    const values = _.map(editions, (bookEdition) => {
+    if (showFormat) {
+      extendedTitle = `${extendedTitle} - ${translate(isAudiobook ? 'Audiobook' : 'Ebook')}`;
+    }
+
+    const options = _.map(editions, (bookEdition) => {
 
       let value = `${bookEdition.title}`;
 
@@ -59,17 +66,21 @@ class SelectEditionRow extends Component {
         extras.push(`${bookEdition.pageCount}p`);
       }
 
-      if (extras) {
+      if (extras.length) {
         value = `${value} [${extras.join(', ')}]`;
       }
 
       return {
         key: bookEdition.foreignEditionId,
-        value
+        value,
+        isOwnFormat: Boolean(bookEdition.isAudiobook) === isAudiobook
       };
     });
 
-    const sortedValues = _.orderBy(values, ['value']);
+    // Editions of the row's own format come first. The rest stay on offer, since an edition's
+    // format is free text in the metadata and is not always filled in.
+    const sortedValues = _.orderBy(options, ['isOwnFormat', 'value'], ['desc', 'asc'])
+      .map(({ key, value }) => ({ key, value }));
 
     return (
       <TableRow>
@@ -97,7 +108,7 @@ class SelectEditionRow extends Component {
                 <TableRowCell key={name}>
                   <FormInputGroup
                     type={inputTypes.SELECT}
-                    name={id.toString()}
+                    name={groupKey}
                     values={sortedValues}
                     value={matchedEditionId}
                     onChange={this.onInputChange}
@@ -116,7 +127,9 @@ class SelectEditionRow extends Component {
 }
 
 SelectEditionRow.propTypes = {
-  id: PropTypes.number.isRequired,
+  groupKey: PropTypes.string.isRequired,
+  isAudiobook: PropTypes.bool.isRequired,
+  showFormat: PropTypes.bool.isRequired,
   matchedEditionId: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,
   disambiguation: PropTypes.string,

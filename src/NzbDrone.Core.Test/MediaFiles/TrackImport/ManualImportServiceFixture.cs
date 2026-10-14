@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
 using System.Linq;
 using FizzWare.NBuilder;
@@ -188,6 +189,24 @@ namespace NzbDrone.Core.Test.MediaFiles.BookImport
 
             Mocker.GetMock<IProvideBookInfo>()
                 .Verify(v => v.GetBookInfo(It.IsAny<string>()), Times.Never());
+        }
+
+        [Test]
+        public void should_identify_each_format_of_a_book_as_a_release_of_its_own()
+        {
+            Mocker.GetMock<IMakeImportDecision>()
+                .Setup(s => s.GetImportDecisions(It.IsAny<List<IFileInfo>>(), It.IsAny<IdentificationOverrides>(), It.IsAny<ImportDecisionMakerInfo>(), It.IsAny<ImportDecisionMakerConfig>()))
+                .Returns(new List<ImportDecision<LocalBook>>());
+
+            var items = new[] { GivenFile("Book.epub", Quality.EPUB), GivenFile("Book.m4b", Quality.M4B) }
+                .Select(f => new ManualImportItem { Path = f.Path, Author = _author, Book = _book })
+                .ToList();
+
+            Subject.UpdateItems(items);
+
+            // Identified as one release, the two would come back matched to a single edition.
+            Mocker.GetMock<IMakeImportDecision>()
+                .Verify(v => v.GetImportDecisions(It.Is<List<IFileInfo>>(f => f.Count == 1), It.IsAny<IdentificationOverrides>(), It.IsAny<ImportDecisionMakerInfo>(), It.IsAny<ImportDecisionMakerConfig>()), Times.Exactly(2));
         }
 
         [Test]

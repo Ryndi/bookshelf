@@ -78,11 +78,14 @@ class SelectEditionModalContent extends Component {
                 books.map((item) => {
                   return (
                     <SelectEditionRowConnector
-                      key={item.book.id}
+                      key={item.key}
+                      {...item.book}
+                      groupKey={item.key}
+                      isAudiobook={item.isAudiobook}
+                      showFormat={item.showFormat}
                       matchedEditionId={item.matchedEditionId}
                       columns={columns}
                       onEditionSelect={onEditionSelect}
-                      {...item.book}
                     />
                   );
                 })

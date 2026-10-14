@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
@@ -53,7 +54,8 @@ class SelectEditionModalContentConnector extends Component {
   // Control
 
   populate = () => {
-    const bookId = this.props.books.map((b) => b.book.id);
+    // A book being imported in both formats has a row for each.
+    const bookId = _.uniq(this.props.books.map((b) => b.book.id));
 
     this.props.fetchEditions({ bookId });
   };
@@ -65,8 +67,9 @@ class SelectEditionModalContentConnector extends Component {
   //
   // Listeners
 
-  onEditionSelect = (bookId, foreignEditionId) => {
-    const ids = this.props.importIdsByBook[bookId];
+  onEditionSelect = (key, foreignEditionId) => {
+    // Only the files of this row's book and format move to the chosen edition.
+    const { ids } = _.find(this.props.books, { key });
 
     ids.forEach((id) => {
       this.props.updateInteractiveImportItem({
@@ -97,7 +100,6 @@ class SelectEditionModalContentConnector extends Component {
 }
 
 SelectEditionModalContentConnector.propTypes = {
-  importIdsByBook: PropTypes.object.isRequired,
   books: PropTypes.arrayOf(PropTypes.object).isRequired,
   fetchEditions: PropTypes.func.isRequired,
   clearEditions: PropTypes.func.isRequired,

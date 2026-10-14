@@ -190,7 +190,12 @@ namespace NzbDrone.Core.MediaFiles.BookImport.Manual
         public List<ManualImportItem> UpdateItems(List<ManualImportItem> items)
         {
             var replaceExistingFiles = items.All(x => x.ReplaceExistingFiles);
-            var groupedItems = items.Where(x => !x.AdditionalFile).GroupBy(x => x.Book?.Id);
+
+            // Each group is identified as a single release. An ebook and an audiobook of the same book
+            // are two releases of it, and together they would be matched to one edition between them.
+            var groupedItems = items.Where(x => !x.AdditionalFile)
+                .GroupBy(x => new { BookId = x.Book?.Id, IsAudio = MediaFileExtensions.IsAudioFile(x.Path) });
+
             _logger.Debug($"UpdateItems, {groupedItems.Count()} groups, replaceExisting {replaceExistingFiles}");
 
             var result = new List<ManualImportItem>();

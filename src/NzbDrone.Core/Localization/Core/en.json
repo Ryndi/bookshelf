@@ -564,6 +564,7 @@
   "ManageLists": "Manage Lists",
   "ManualDownload": "Manual Download",
   "ManualImport": "Manual Import",
+  "ManualImportInconsistentEditions": "Files of one book and format are matched to different editions. Choose one with Select Edition",
   "ManualImportSelectEdition": "Manual Import - Select Edition",
   "MarkAsFailed": "Mark as Failed",
   "MarkAsFailedMessageText": "Are you sure you want to mark '{0}' as failed?",
