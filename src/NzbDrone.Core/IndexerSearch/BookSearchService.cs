@@ -9,6 +9,8 @@ using NzbDrone.Core.Datastore;
 using NzbDrone.Core.DecisionEngine;
 using NzbDrone.Core.Download;
 using NzbDrone.Core.Messaging.Commands;
+using NzbDrone.Core.Profiles.Qualities;
+using NzbDrone.Core.Qualities;
 using NzbDrone.Core.Queue;
 
 namespace NzbDrone.Core.IndexerSearch
@@ -21,6 +23,7 @@ namespace NzbDrone.Core.IndexerSearch
         private readonly IBookService _bookService;
         private readonly IBookCutoffService _bookCutoffService;
         private readonly IQueueService _queueService;
+        private readonly IQualityProfileService _qualityProfileService;
         private readonly IProcessDownloadDecisions _processDownloadDecisions;
         private readonly Logger _logger;
 
@@ -28,6 +31,7 @@ namespace NzbDrone.Core.IndexerSearch
             IBookService bookService,
             IBookCutoffService bookCutoffService,
             IQueueService queueService,
+            IQualityProfileService qualityProfileService,
             IProcessDownloadDecisions processDownloadDecisions,
             Logger logger)
         {
@@ -35,8 +39,42 @@ namespace NzbDrone.Core.IndexerSearch
             _bookService = bookService;
             _bookCutoffService = bookCutoffService;
             _queueService = queueService;
+            _qualityProfileService = qualityProfileService;
             _processDownloadDecisions = processDownloadDecisions;
             _logger = logger;
+        }
+
+        // A book is left out of a bulk search while every format it wants is already on its way.
+        // Leaving it out for anything queued at all, an ebook downloading would stop the search for
+        // the audiobook until it finished.
+        internal List<Book> NotFullyQueued(List<Book> books)
+        {
+            var queued = _queueService.GetQueue()
+                .Where(q => q.Book != null)
+                .ToLookup(q => q.Book.Id, q => Quality.IsAudio(q.Quality?.Quality));
+
+            // Read once here rather than once for each author.
+            var profiles = _qualityProfileService.All().ToDictionary(p => p.Id);
+
+            return books.Where(book =>
+            {
+                var queuedFormats = queued[book.Id].ToList();
+
+                if (!queuedFormats.Any())
+                {
+                    return true;
+                }
+
+                var author = book.Author.Value;
+
+                if (profiles.TryGetValue(author.QualityProfileId, out var profile))
+                {
+                    author.QualityProfile = profile;
+                }
+
+                return (author.WantsEbooks() && !queuedFormats.Contains(false)) ||
+                       (author.WantsAudiobooks(book) && !queuedFormats.Contains(true));
+            }).ToList();
         }
 
         private async Task SearchForBulkBooks(List<Book> books, bool userInvokedSearch)
@@ -112,8 +150,7 @@ namespace NzbDrone.Core.IndexerSearch
                 books = _bookService.BooksWithoutFiles(pagingSpec).Records.ToList();
             }
 
-            var queue = _queueService.GetQueue().Where(q => q.Book != null).Select(q => q.Book.Id);
-            var missing = books.Where(e => !queue.Contains(e.Id)).ToList();
+            var missing = NotFullyQueued(books);
 
             SearchForBulkBooks(missing, message.Trigger == CommandTrigger.Manual).GetAwaiter().GetResult();
         }
@@ -132,8 +169,7 @@ namespace NzbDrone.Core.IndexerSearch
 
             var books = _bookCutoffService.BooksWhereCutoffUnmet(pagingSpec).Records.ToList();
 
-            var queue = _queueService.GetQueue().Where(q => q.Book != null).Select(q => q.Book.Id);
-            var cutoffUnmet = books.Where(e => !queue.Contains(e.Id)).ToList();
+            var cutoffUnmet = NotFullyQueued(books);
 
             SearchForBulkBooks(cutoffUnmet, message.Trigger == CommandTrigger.Manual).GetAwaiter().GetResult();
         }
