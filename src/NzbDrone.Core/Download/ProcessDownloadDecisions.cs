@@ -8,6 +8,7 @@ using NzbDrone.Core.Download.Clients;
 using NzbDrone.Core.Download.Pending;
 using NzbDrone.Core.Exceptions;
 using NzbDrone.Core.Indexers;
+using NzbDrone.Core.Qualities;
 
 namespace NzbDrone.Core.Download
 {
@@ -164,11 +165,16 @@ namespace NzbDrone.Core.Download
             return (decision.Approved || decision.TemporarilyRejected) && decision.RemoteBook.Books.Any();
         }
 
+        // An ebook and an audiobook of a book are grabbed side by side, so a release only stands in
+        // for others of its own format. Matched on the book alone, grabbing one format would skip
+        // the other - without even keeping it as pending - until a later search turned it up again.
         private bool IsBookProcessed(List<DownloadDecision> decisions, DownloadDecision report)
         {
             var bookIds = report.RemoteBook.Books.Select(e => e.Id).ToList();
+            var isAudio = Quality.IsAudio(report.RemoteBook.ParsedBookInfo.Quality.Quality);
 
-            return decisions.SelectMany(r => r.RemoteBook.Books)
+            return decisions.Where(r => Quality.IsAudio(r.RemoteBook.ParsedBookInfo.Quality.Quality) == isAudio)
+                            .SelectMany(r => r.RemoteBook.Books)
                             .Select(e => e.Id)
                             .ToList()
                             .Intersect(bookIds)

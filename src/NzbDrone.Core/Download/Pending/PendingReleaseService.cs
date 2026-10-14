@@ -397,9 +397,14 @@ namespace NzbDrone.Core.Download.Pending
             var pendingReleases = GetPendingReleases(remoteBook.Author.Id);
             var bookIds = remoteBook.Books.Select(e => e.Id);
 
+            // Only releases of the grabbed format are spent by it. Audio ranks above every ebook
+            // quality in a profile, so grabbing an audiobook would otherwise throw away a delayed ebook.
+            var isAudio = Quality.IsAudio(remoteBook.ParsedBookInfo.Quality.Quality);
+
             var existingReports = pendingReleases.Where(r => r.RemoteBook.Books.Select(e => e.Id)
                                                              .Intersect(bookIds)
-                                                             .Any())
+                                                             .Any() &&
+                                                             Quality.IsAudio(r.RemoteBook.ParsedBookInfo.Quality.Quality) == isAudio)
                                                              .ToList();
 
             if (existingReports.Empty())

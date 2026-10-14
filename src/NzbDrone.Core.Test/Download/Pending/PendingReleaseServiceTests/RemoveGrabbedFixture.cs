@@ -137,6 +137,19 @@ namespace NzbDrone.Core.Test.Download.Pending.PendingReleaseServiceTests
             VerifyNoDelete();
         }
 
+        [Test]
+        public void should_not_delete_a_held_release_of_the_other_format()
+        {
+            // Audio ranks above every ebook quality, so grabbing an audiobook would otherwise count as
+            // an upgrade on a delayed ebook and throw it away.
+            _profile.Items.Insert(0, new QualityProfileQualityItem { Allowed = true, Quality = Quality.EPUB });
+            GivenHeldRelease(new QualityModel(Quality.EPUB));
+
+            Subject.Handle(new BookGrabbedEvent(_remoteBook));
+
+            VerifyNoDelete();
+        }
+
         private void VerifyDelete()
         {
             Mocker.GetMock<IPendingReleaseRepository>()

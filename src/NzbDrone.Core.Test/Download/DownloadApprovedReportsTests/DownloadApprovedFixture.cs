@@ -105,6 +105,38 @@ namespace NzbDrone.Core.Test.Download.DownloadApprovedReportsTests
         }
 
         [Test]
+        public async Task should_download_an_ebook_and_an_audiobook_of_the_same_book()
+        {
+            var books = new List<Book> { GetBook(1) };
+
+            var decisions = new List<DownloadDecision>
+            {
+                new DownloadDecision(GetRemoteBook(books, new QualityModel(Quality.EPUB))),
+                new DownloadDecision(GetRemoteBook(books, new QualityModel(Quality.M4B)))
+            };
+
+            await Subject.ProcessDecisions(decisions);
+            Mocker.GetMock<IDownloadService>().Verify(v => v.DownloadReport(It.IsAny<RemoteBook>(), null), Times.Exactly(2));
+        }
+
+        [Test]
+        public async Task should_still_only_download_one_release_of_each_format()
+        {
+            var books = new List<Book> { GetBook(1) };
+
+            var decisions = new List<DownloadDecision>
+            {
+                new DownloadDecision(GetRemoteBook(books, new QualityModel(Quality.AZW3))),
+                new DownloadDecision(GetRemoteBook(books, new QualityModel(Quality.EPUB))),
+                new DownloadDecision(GetRemoteBook(books, new QualityModel(Quality.M4B))),
+                new DownloadDecision(GetRemoteBook(books, new QualityModel(Quality.MP3)))
+            };
+
+            await Subject.ProcessDecisions(decisions);
+            Mocker.GetMock<IDownloadService>().Verify(v => v.DownloadReport(It.IsAny<RemoteBook>(), null), Times.Exactly(2));
+        }
+
+        [Test]
         public async Task should_return_downloaded_reports()
         {
             var books = new List<Book> { GetBook(1) };
