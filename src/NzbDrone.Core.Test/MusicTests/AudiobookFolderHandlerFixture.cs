@@ -98,6 +98,9 @@ namespace NzbDrone.Core.Test.BookTests
 
             Mocker.GetMock<IDiskProvider>()
                 .Verify(v => v.CreateFolder(_root), Times.Never());
+
+            // A missing root most likely means the volume is not mounted, which is worth a warning.
+            ExceptionVerification.ExpectedWarns(1);
         }
     }
 }
