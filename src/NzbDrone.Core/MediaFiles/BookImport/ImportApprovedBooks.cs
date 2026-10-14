@@ -516,6 +516,21 @@ namespace NzbDrone.Core.MediaFiles.BookImport
             var book = decisions.First().Item.Book;
             var edition = decisions.First().Item.Edition;
 
+            // Identification hands back whatever it was given when it finds nothing to match, and that
+            // need not include an edition. With nothing to file the book against it is turned away here,
+            // rather than failing the import for every other book alongside it.
+            if (edition == null)
+            {
+                _logger.Warn("No edition of {0} to import against, skipping import", book);
+
+                foreach (var decision in decisions)
+                {
+                    decision.Reject(new Rejection("No edition of this book to import against"));
+                }
+
+                return null;
+            }
+
             if (edition.Id == 0)
             {
                 var dbEdition = _editionService.GetEditionByForeignEditionId(edition.ForeignEditionId);

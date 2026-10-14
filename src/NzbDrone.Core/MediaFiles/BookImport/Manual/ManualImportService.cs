@@ -305,6 +305,33 @@ namespace NzbDrone.Core.MediaFiles.BookImport.Manual
             return $"{file.ForeignEditionId}|{MediaFileExtensions.IsAudioFile(file.Path)}";
         }
 
+        // The edition named for a file can be missing, or be one that neither the library nor the
+        // metadata source knows, and without one the import has nothing to file it against. So it falls
+        // back to the edition the import dialog shows for the row: the book's monitored edition of the
+        // file's own format.
+        private Edition FindEdition(ManualImportFile file, Book book)
+        {
+            if (file.ForeignEditionId.IsNotNullOrWhiteSpace())
+            {
+                var edition = _editionService.GetEditionByForeignEditionId(file.ForeignEditionId);
+
+                if (edition == null)
+                {
+                    var tuple = _bookInfo.GetBookInfo(book.ForeignBookId);
+                    edition = tuple.Item2.Editions.Value.SingleOrDefault(x => x.ForeignEditionId == file.ForeignEditionId);
+                }
+
+                if (edition != null)
+                {
+                    return edition;
+                }
+
+                _logger.Debug("Edition {0} was not found, importing {1} against the monitored edition instead", file.ForeignEditionId, file.Path);
+            }
+
+            return book.Editions.Value.MonitoredForFormat(MediaFileExtensions.IsAudioFile(file.Path));
+        }
+
         public void Execute(ManualImportCommand message)
         {
             _logger.ProgressTrace("Manually importing {0} files using mode {1}", message.Files.Count, message.ImportMode);
@@ -340,13 +367,7 @@ namespace NzbDrone.Core.MediaFiles.BookImport.Manual
 
                     var author = _authorService.GetAuthor(file.AuthorId);
                     var book = _bookService.GetBook(file.BookId);
-
-                    var edition = _editionService.GetEditionByForeignEditionId(file.ForeignEditionId);
-                    if (edition == null)
-                    {
-                        var tuple = _bookInfo.GetBookInfo(book.ForeignBookId);
-                        edition = tuple.Item2.Editions.Value.SingleOrDefault(x => x.ForeignEditionId == file.ForeignEditionId);
-                    }
+                    var edition = FindEdition(file, book);
 
                     var fileRootFolder = _rootFolderService.GetBestRootFolder(file.Path);
                     var fileInfo = _diskProvider.GetFileInfo(file.Path);
@@ -369,6 +390,14 @@ namespace NzbDrone.Core.MediaFiles.BookImport.Manual
                     };
 
                     var importDecision = new ImportDecision<LocalBook>(localTrack);
+
+                    // Only a book with no monitored edition leaves nothing to fall back to.
+                    if (edition == null)
+                    {
+                        _logger.Warn("No edition of {0} to import {1} against, skipping import", book, file.Path);
+                        importDecision.Reject(new Rejection("No edition of this book to import against"));
+                    }
+
                     if (_rootFolderService.GetBestRootFolder(author.Path) == null)
                     {
                         _logger.Warn($"Destination author folder {author.Path} not in a Root Folder, skipping import");

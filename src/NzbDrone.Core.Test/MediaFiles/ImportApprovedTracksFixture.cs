@@ -317,5 +317,48 @@ namespace NzbDrone.Core.Test.MediaFiles
             added.Should().NotBeNull();
             added.Should().OnlyContain(f => f.EditionId == saved.Id);
         }
+
+        [Test]
+        public void should_import_the_rest_of_the_batch_when_one_book_has_no_edition()
+        {
+            var withoutEdition = _approvedDecisions.First();
+            withoutEdition.Item.Edition = null;
+
+            var author = withoutEdition.Item.Author;
+
+            var otherBook = Builder<Book>.CreateNew()
+                .With(b => b.Id = 2)
+                .With(b => b.ForeignBookId = "other")
+                .With(b => b.Author = author)
+                .Build();
+
+            var otherEdition = Builder<Edition>.CreateNew()
+                .With(e => e.Id = 2)
+                .With(e => e.Book = otherBook)
+                .With(e => e.Monitored = true)
+                .Build();
+
+            otherBook.Editions = new List<Edition> { otherEdition };
+
+            var other = new ImportDecision<LocalBook>(new LocalBook
+            {
+                Author = author,
+                Book = otherBook,
+                Edition = otherEdition,
+                Part = 1,
+                Path = Path.Combine(author.Path, "Other Book.epub"),
+                Quality = new QualityModel(Quality.EPUB),
+                FileTrackInfo = new ParsedTrackInfo()
+            });
+
+            var result = Subject.Import(new List<ImportDecision<LocalBook>> { withoutEdition, other }, false);
+
+            // A book with nothing to import against is turned away on its own, rather than failing
+            // the whole import and taking every other book in it down too.
+            result.Single(r => r.ImportDecision == withoutEdition).Result.Should().NotBe(ImportResultType.Imported);
+            result.Single(r => r.ImportDecision == other).Result.Should().Be(ImportResultType.Imported);
+
+            ExceptionVerification.ExpectedWarns(1);
+        }
     }
 }
