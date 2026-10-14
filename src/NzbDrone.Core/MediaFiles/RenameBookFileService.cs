@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NLog;
+using NzbDrone.Common;
 using NzbDrone.Common.Disk;
 using NzbDrone.Common.Extensions;
 using NzbDrone.Common.Instrumentation.Extensions;
@@ -167,8 +168,17 @@ namespace NzbDrone.Core.MediaFiles
             {
                 _eventAggregator.PublishEvent(new AuthorRenamedEvent(author, renamed));
 
-                _logger.Debug("Removing Empty Subfolders from: {0}", author.Path);
-                _diskProvider.RemoveEmptySubfolders(author.Path);
+                // Audiobooks kept under a root folder of their own leave their emptied folders there,
+                // and an author holding only those may have no main folder on disk at all.
+                var authorFolders = new[] { author.Path, author.AudiobookPath }
+                    .Where(p => p.IsNotNullOrWhiteSpace() && _diskProvider.FolderExists(p))
+                    .Distinct(PathEqualityComparer.Instance);
+
+                foreach (var authorFolder in authorFolders)
+                {
+                    _logger.Debug("Removing Empty Subfolders from: {0}", authorFolder);
+                    _diskProvider.RemoveEmptySubfolders(authorFolder);
+                }
             }
         }
 

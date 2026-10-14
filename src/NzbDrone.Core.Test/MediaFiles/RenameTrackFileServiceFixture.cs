@@ -4,12 +4,14 @@ using FizzWare.NBuilder;
 using FluentAssertions;
 using Moq;
 using NUnit.Framework;
+using NzbDrone.Common.Disk;
 using NzbDrone.Core.Books;
 using NzbDrone.Core.MediaFiles;
 using NzbDrone.Core.MediaFiles.Commands;
 using NzbDrone.Core.MediaFiles.Events;
 using NzbDrone.Core.Messaging.Events;
 using NzbDrone.Core.Test.Framework;
+using NzbDrone.Test.Common;
 
 namespace NzbDrone.Core.Test.MediaFiles
 {
@@ -125,6 +127,28 @@ namespace NzbDrone.Core.Test.MediaFiles
             Subject.Execute(new RenameFilesCommand(_author.Id, new List<int> { 1, 2 }));
 
             _trackFiles.Should().OnlyContain(f => f.PartCount == 1);
+        }
+
+        [Test]
+        public void should_clear_emptied_folders_under_the_audiobook_root_when_the_author_has_no_ebook_folder()
+        {
+            _author.Path = @"C:\Books\Author".AsOsAgnostic();
+            _author.AudiobookPath = @"C:\Audiobooks\Author".AsOsAgnostic();
+
+            Mocker.GetMock<IDiskProvider>()
+                  .Setup(s => s.FolderExists(_author.AudiobookPath))
+                  .Returns(true);
+
+            GivenTrackFiles();
+            GivenMovedFiles();
+
+            Subject.Execute(new RenameFilesCommand(_author.Id, new List<int> { 1 }));
+
+            Mocker.GetMock<IDiskProvider>()
+                  .Verify(v => v.RemoveEmptySubfolders(_author.AudiobookPath), Times.Once());
+
+            Mocker.GetMock<IDiskProvider>()
+                  .Verify(v => v.RemoveEmptySubfolders(_author.Path), Times.Never());
         }
 
         [Test]

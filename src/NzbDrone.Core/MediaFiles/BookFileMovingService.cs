@@ -124,9 +124,11 @@ namespace NzbDrone.Core.MediaFiles
 
             _updateBookFileService.ChangeFileDateForFile(bookFile, author, book);
 
+            // The folder the file went into is the audiobook one for an audiobook kept under a root of
+            // its own - the main folder may not even exist then.
             try
             {
-                _mediaFileAttributeService.SetFolderLastWriteTime(author.Path, bookFile.DateAdded);
+                _mediaFileAttributeService.SetFolderLastWriteTime(author.PathForExtension(destinationFilePath), bookFile.DateAdded);
             }
             catch (Exception ex)
             {

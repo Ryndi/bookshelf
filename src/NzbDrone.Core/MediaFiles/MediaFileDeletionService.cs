@@ -273,9 +273,18 @@ namespace NzbDrone.Core.MediaFiles
                 var author = message.BookFile.Author.Value;
                 var bookFolder = message.BookFile.Path.GetParentPath();
 
-                if (_diskProvider.GetFiles(author.Path, true).Empty())
+                // An audiobook kept under a root folder of its own empties the author's folder there,
+                // and the main folder may not exist at all when the author holds nothing else.
+                var authorPath = GetAuthorPathHolding(author, message.BookFile.Path);
+
+                if (!_diskProvider.FolderExists(authorPath))
                 {
-                    _diskProvider.DeleteFolder(author.Path, true);
+                    return;
+                }
+
+                if (_diskProvider.GetFiles(authorPath, true).Empty())
+                {
+                    _diskProvider.DeleteFolder(authorPath, true);
                 }
                 else if (_diskProvider.GetFiles(bookFolder, true).Empty())
                 {

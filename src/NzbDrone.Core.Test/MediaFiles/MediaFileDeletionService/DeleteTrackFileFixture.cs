@@ -1,11 +1,14 @@
+using System.Collections.Generic;
 using System.IO;
 using FizzWare.NBuilder;
 using Moq;
 using NUnit.Framework;
 using NzbDrone.Common.Disk;
 using NzbDrone.Core.Books;
+using NzbDrone.Core.Configuration;
 using NzbDrone.Core.Exceptions;
 using NzbDrone.Core.MediaFiles;
+using NzbDrone.Core.MediaFiles.Events;
 using NzbDrone.Core.RootFolders;
 using NzbDrone.Core.Test.Framework;
 using NzbDrone.Test.Common;
@@ -175,6 +178,26 @@ namespace NzbDrone.Core.Test.MediaFiles.MediaFileDeletionService
             Subject.DeleteTrackFile(_author, audiobook);
 
             Mocker.GetMock<IRecycleBinProvider>().Verify(v => v.DeleteFile(audiobook.Path, Path.Combine("Author Name", "Book")), Times.Once());
+        }
+
+        [Test]
+        public void should_remove_the_emptied_audiobook_folder_of_an_author_without_an_ebook_folder()
+        {
+            var audiobook = GivenAudiobookUnderItsOwnRoot();
+            audiobook.Author = _author;
+
+            Mocker.GetMock<IConfigService>()
+                  .SetupGet(s => s.DeleteEmptyFolders)
+                  .Returns(true);
+
+            Mocker.GetMock<IDiskProvider>()
+                  .Setup(s => s.GetFiles(_author.AudiobookPath, true))
+                  .Returns(new List<string>());
+
+            Subject.Handle(new BookFileDeletedEvent(audiobook, DeleteMediaFileReason.Manual));
+
+            Mocker.GetMock<IDiskProvider>().Verify(v => v.DeleteFolder(_author.AudiobookPath, true), Times.Once());
+            Mocker.GetMock<IDiskProvider>().Verify(v => v.GetFiles(_author.Path, It.IsAny<bool>()), Times.Never());
         }
 
         [Test]

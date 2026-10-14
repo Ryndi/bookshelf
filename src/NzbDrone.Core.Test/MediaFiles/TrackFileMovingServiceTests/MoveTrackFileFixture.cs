@@ -108,6 +108,29 @@ namespace NzbDrone.Core.Test.MediaFiles.TrackFileMovingServiceTests
         }
 
         [Test]
+        public void should_set_the_time_on_the_audiobook_folder_an_audiobook_is_moved_into()
+        {
+            _author.AudiobookPath = @"C:\Test\Audiobooks\Author".AsOsAgnostic();
+
+            Mocker.GetMock<IBuildFileNames>()
+                  .Setup(s => s.BuildBookFilePath(It.IsAny<Author>(), It.IsAny<Edition>(), It.IsAny<string>(), It.IsAny<string>()))
+                  .Returns(@"C:\Test\Audiobooks\Author\Book\File Name.mp3".AsOsAgnostic());
+
+            Mocker.GetMock<IBuildFileNames>()
+                  .Setup(s => s.BuildBookPath(It.IsAny<Author>(), It.IsAny<string>()))
+                  .Returns(@"C:\Test\Audiobooks\Author\Book".AsOsAgnostic());
+
+            Mocker.GetMock<IDiskProvider>()
+                  .Setup(s => s.FolderExists(@"C:\Test\Audiobooks\".AsOsAgnostic()))
+                  .Returns(true);
+
+            Subject.MoveBookFile(_trackFile, _localtrack);
+
+            Mocker.GetMock<IMediaFileAttributeService>()
+                  .Verify(v => v.SetFolderLastWriteTime(_author.AudiobookPath, It.IsAny<DateTime>()), Times.Once());
+        }
+
+        [Test]
         public void should_not_notify_if_author_folder_already_exists()
         {
             Mocker.GetMock<IDiskProvider>()
