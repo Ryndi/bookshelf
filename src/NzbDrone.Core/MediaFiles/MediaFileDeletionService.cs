@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net;
 using NLog;
 using NzbDrone.Common.Disk;
@@ -61,7 +62,8 @@ namespace NzbDrone.Core.MediaFiles
         public void DeleteTrackFile(Author author, BookFile bookFile)
         {
             var fullPath = bookFile.Path;
-            var rootFolder = _diskProvider.GetParentFolder(author.Path);
+            var authorPath = GetAuthorPathHolding(author, fullPath);
+            var rootFolder = _diskProvider.GetParentFolder(authorPath);
 
             if (!_diskProvider.FolderExists(rootFolder))
             {
@@ -75,9 +77,12 @@ namespace NzbDrone.Core.MediaFiles
                 throw new NzbDroneClientException(HttpStatusCode.Conflict, "Author's root folder ({0}) is empty.", rootFolder);
             }
 
-            if (_diskProvider.FolderExists(author.Path))
+            if (_diskProvider.FolderExists(authorPath))
             {
-                var subfolder = _diskProvider.GetParentFolder(author.Path).GetRelativePath(_diskProvider.GetParentFolder(fullPath));
+                // A file kept outside the author's folders altogether has no folders to keep in the
+                // recycle bin, rather than failing to delete at all.
+                var fileFolder = _diskProvider.GetParentFolder(fullPath);
+                var subfolder = rootFolder.IsParentPath(fileFolder) ? rootFolder.GetRelativePath(fileFolder) : string.Empty;
                 DeleteTrackFile(bookFile, subfolder);
             }
             else
@@ -85,6 +90,22 @@ namespace NzbDrone.Core.MediaFiles
                 // delete from db even if the author folder is missing
                 _mediaFileService.Delete(bookFile, DeleteMediaFileReason.Manual);
             }
+        }
+
+        // Audiobooks can be kept under a root folder of their own, so the folders checked are the
+        // ones this file's format uses - or the main ones, for a file kept there from before that
+        // changed. Checked against the main folder alone, deleting an audiobook from its own root
+        // would fail outright, or leave the file on disk when the author has no ebook folder.
+        private static string GetAuthorPathHolding(Author author, string path)
+        {
+            var formatPath = author.PathForExtension(path);
+
+            if (!formatPath.PathEquals(author.Path) && !formatPath.IsParentPath(path) && author.Path.IsParentPath(path))
+            {
+                return author.Path;
+            }
+
+            return formatPath;
         }
 
         public void DeleteTrackFile(BookFile bookFile, string subfolder = "")
@@ -106,7 +127,10 @@ namespace NzbDrone.Core.MediaFiles
         private void DeleteFile(BookFile bookFile, string subfolder = "")
         {
             var rootFolder = _rootFolderService.GetBestRootFolder(bookFile.Path);
-            var isCalibre = rootFolder.IsCalibreLibrary && rootFolder.CalibreSettings != null;
+
+            // An audiobook folder that was never added as a root folder of its own has no root to
+            // find, and nothing to say about Calibre.
+            var isCalibre = rootFolder != null && rootFolder.IsCalibreLibrary && rootFolder.CalibreSettings != null;
 
             try
             {
@@ -185,7 +209,43 @@ namespace NzbDrone.Core.MediaFiles
 
                     _eventAggregator.PublishEvent(new DeleteCompletedEvent());
                 }
+
+                DeleteAudiobookFolder(author);
             }
+        }
+
+        // Audiobooks kept under a root folder of their own go with the author too. Recycling only the
+        // main folder would leave them on disk, to turn up again as unmapped files.
+        private void DeleteAudiobookFolder(Author author)
+        {
+            var path = author.AudiobookPath;
+
+            if (path.IsNullOrWhiteSpace() || path.PathEquals(author.Path) || !_diskProvider.FolderExists(path))
+            {
+                return;
+            }
+
+            var rootFolder = _rootFolderService.GetBestRootFolder(path);
+
+            if (rootFolder != null && rootFolder.IsCalibreLibrary && rootFolder.CalibreSettings != null)
+            {
+                return;
+            }
+
+            foreach (var other in _authorService.GetAllAuthors().Where(a => a.Id != author.Id))
+            {
+                foreach (var otherPath in new[] { other.Path, other.AudiobookPath }.Where(p => p.IsNotNullOrWhiteSpace()))
+                {
+                    if (path.PathEquals(otherPath) || path.IsParentPath(otherPath))
+                    {
+                        _logger.Error("Audiobook path: '{0}' is shared with another author, not deleting files.", path);
+                        return;
+                    }
+                }
+            }
+
+            _recycleBinProvider.DeleteFolder(path);
+            _eventAggregator.PublishEvent(new DeleteCompletedEvent());
         }
 
         public void HandleAsync(BookDeletedEvent message)

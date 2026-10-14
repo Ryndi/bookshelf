@@ -125,6 +125,58 @@ namespace NzbDrone.Core.Test.MediaFiles.MediaFileDeletionService
             Mocker.GetMock<IMediaFileService>().Verify(v => v.Delete(_trackFile, DeleteMediaFileReason.Manual), Times.Once());
         }
 
+        private BookFile GivenAudiobookUnderItsOwnRoot()
+        {
+            var audiobookRoot = @"C:\Test\Audiobooks".AsOsAgnostic();
+            _author.AudiobookPath = Path.Combine(audiobookRoot, "Author Name");
+
+            var bookFolder = Path.Combine(_author.AudiobookPath, "Book");
+            var audiobook = Builder<BookFile>.CreateNew()
+                .With(f => f.Path = Path.Combine(bookFolder, "Book.m4b"))
+                .Build();
+
+            Mocker.GetMock<IDiskProvider>().Setup(s => s.GetParentFolder(_author.AudiobookPath)).Returns(audiobookRoot);
+            Mocker.GetMock<IDiskProvider>().Setup(s => s.GetParentFolder(audiobook.Path)).Returns(bookFolder);
+            Mocker.GetMock<IDiskProvider>().Setup(s => s.FolderExists(audiobookRoot)).Returns(true);
+            Mocker.GetMock<IDiskProvider>().Setup(s => s.GetDirectories(audiobookRoot)).Returns(new[] { _author.AudiobookPath });
+            Mocker.GetMock<IDiskProvider>().Setup(s => s.FolderExists(_author.AudiobookPath)).Returns(true);
+            Mocker.GetMock<IDiskProvider>().Setup(s => s.FileExists(audiobook.Path)).Returns(true);
+
+            return audiobook;
+        }
+
+        [Test]
+        public void should_delete_an_audiobook_kept_under_its_own_root_folder()
+        {
+            GivenNonCalibreRootFolder();
+            GivenRootFolderExists();
+            GivenRootFolderHasFolders();
+            GivenAuthorFolderExists();
+
+            var audiobook = GivenAudiobookUnderItsOwnRoot();
+
+            Subject.DeleteTrackFile(_author, audiobook);
+
+            Mocker.GetMock<IRecycleBinProvider>().Verify(v => v.DeleteFile(audiobook.Path, Path.Combine("Author Name", "Book")), Times.Once());
+            Mocker.GetMock<IMediaFileService>().Verify(v => v.Delete(audiobook, DeleteMediaFileReason.Manual), Times.Once());
+        }
+
+        [Test]
+        public void should_delete_an_audiobook_when_the_author_has_no_ebook_folder()
+        {
+            // The author folder under the ebook root does not exist. Judged by that, the row would be
+            // removed and the file left behind, to be imported again by the next rescan.
+            GivenNonCalibreRootFolder();
+            GivenRootFolderExists();
+            GivenRootFolderHasFolders();
+
+            var audiobook = GivenAudiobookUnderItsOwnRoot();
+
+            Subject.DeleteTrackFile(_author, audiobook);
+
+            Mocker.GetMock<IRecycleBinProvider>().Verify(v => v.DeleteFile(audiobook.Path, Path.Combine("Author Name", "Book")), Times.Once());
+        }
+
         [Test]
         public void should_handle_error_deleting_track_file()
         {
