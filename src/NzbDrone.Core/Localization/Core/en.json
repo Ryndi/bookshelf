@@ -55,6 +55,7 @@
   "Audiobook": "Audiobook",
   "AudiobookCutoffHelpText": "Once this quality is reached Readarr will no longer download audiobooks",
   "AudiobookEdition": "Audiobook Edition",
+  "AudiobookProfileCheckMessage": "Audiobooks are searched for, but judged by a quality profile that takes no audio quality, so none can be grabbed: {0}",
   "AudiobookQualityProfile": "Audiobook Quality Profile",
   "AudiobookQualityProfileHelpText": "Quality profile used for audiobook releases of this author",
   "AudiobookRootFolder": "Audiobook Root Folder",
