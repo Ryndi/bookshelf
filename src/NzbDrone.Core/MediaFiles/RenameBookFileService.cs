@@ -70,15 +70,24 @@ namespace NzbDrone.Core.MediaFiles
                 .OrderBy(e => e.ExistingPath).ToList();
         }
 
+        // Parts are counted within one edition and one format. An ebook and an audiobook filed
+        // against the same edition - which is where an audiobook goes when no audiobook edition is
+        // monitored - are not parts of each other, and counted together both would be renamed
+        // with a part number.
+        private static string PartKey(BookFile file)
+        {
+            return $"{file.EditionId}|{MediaFileExtensions.IsAudioFile(file.Path)}";
+        }
+
         private IEnumerable<RenameBookFilePreview> GetPreviews(Author author, List<BookFile> files)
         {
-            var counts = files.GroupBy(x => x.EditionId).ToDictionary(g => g.Key, g => g.Count());
+            var counts = files.GroupBy(PartKey).ToDictionary(g => g.Key, g => g.Count());
 
             // Don't rename Calibre files
             foreach (var f in files.Where(x => x.CalibreId == 0))
             {
                 var file = f;
-                file.PartCount = counts[file.EditionId];
+                file.PartCount = counts[PartKey(file)];
 
                 var book = file.Edition.Value;
                 var bookFilePath = file.Path;
@@ -114,14 +123,14 @@ namespace NzbDrone.Core.MediaFiles
         private void RenameFiles(List<BookFile> bookFiles, Author author)
         {
             var allFiles = _mediaFileService.GetFilesByAuthor(author.Id);
-            var counts = allFiles.GroupBy(x => x.EditionId).ToDictionary(g => g.Key, g => g.Count());
+            var counts = allFiles.GroupBy(PartKey).ToDictionary(g => g.Key, g => g.Count());
             var renamed = new List<RenamedBookFile>();
 
             // Don't rename Calibre files
             foreach (var bookFile in bookFiles.Where(x => x.CalibreId == 0))
             {
                 var previousPath = bookFile.Path;
-                bookFile.PartCount = counts[bookFile.EditionId];
+                bookFile.PartCount = counts[PartKey(bookFile)];
 
                 try
                 {

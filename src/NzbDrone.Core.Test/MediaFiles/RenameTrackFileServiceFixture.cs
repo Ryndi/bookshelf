@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using FizzWare.NBuilder;
+using FluentAssertions;
 using Moq;
 using NUnit.Framework;
 using NzbDrone.Core.Books;
@@ -107,6 +108,23 @@ namespace NzbDrone.Core.Test.MediaFiles
 
             Mocker.GetMock<IMediaFileService>()
                   .Verify(v => v.Update(It.IsAny<BookFile>()), Times.Exactly(2));
+        }
+
+        [Test]
+        public void should_not_count_an_ebook_and_an_audiobook_as_parts_of_each_other()
+        {
+            // Filed against the same edition, the way an audiobook is when no audiobook edition is
+            // monitored. Counted together, each would be renamed with a part number.
+            _trackFiles[0].Path = "/books/Author/Book.epub";
+            _trackFiles[1].Path = "/books/Author/Book.m4b";
+            _trackFiles.ForEach(f => f.EditionId = 1);
+
+            GivenTrackFiles();
+            GivenMovedFiles();
+
+            Subject.Execute(new RenameFilesCommand(_author.Id, new List<int> { 1, 2 }));
+
+            _trackFiles.Should().OnlyContain(f => f.PartCount == 1);
         }
 
         [Test]
