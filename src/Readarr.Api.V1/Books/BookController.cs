@@ -14,6 +14,7 @@ using NzbDrone.Core.MediaCover;
 using NzbDrone.Core.MediaFiles;
 using NzbDrone.Core.MediaFiles.Events;
 using NzbDrone.Core.Messaging.Events;
+using NzbDrone.Core.Qualities;
 using NzbDrone.Core.Validation;
 using NzbDrone.Core.Validation.Paths;
 using NzbDrone.Http.REST.Attributes;
@@ -62,6 +63,25 @@ namespace Readarr.Api.V1.Books
             PostValidator.RuleFor(s => s.Author.MetadataProfileId).SetValidator(metadataProfileExistsValidator);
             PostValidator.RuleFor(s => s.Author.RootFolderPath).IsValidPath().When(s => s.Author.Path.IsNullOrWhiteSpace());
             PostValidator.RuleFor(s => s.Author.ForeignAuthorId).NotEmpty();
+
+            // A book can want an audiobook when its author does not, but only with a profile to judge
+            // one by. Without one every audiobook release is turned away, and the book stays on the
+            // Missing list for good.
+            PutValidator.RuleFor(s => s.SearchAudiobooks)
+                        .Must((book, wants) => wants != true || CanTakeAudiobooks(book.AuthorId))
+                        .WithMessage("The quality profile judging this author's audiobooks takes no audiobook quality");
+        }
+
+        private bool CanTakeAudiobooks(int authorId)
+        {
+            if (authorId <= 0)
+            {
+                return true;
+            }
+
+            var author = _authorService.GetAuthor(authorId);
+
+            return author.ProfileFor(Quality.UnknownAudio)?.Allows(true) ?? false;
         }
 
         [HttpGet]

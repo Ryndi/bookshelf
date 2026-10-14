@@ -136,6 +136,8 @@ class EditBookModalContent extends Component {
                   { key: 'true', value: translate('Yes') },
                   { key: 'false', value: translate('No') }
                 ]}
+                errors={searchAudiobooks ? searchAudiobooks.errors : []}
+                warnings={searchAudiobooks ? searchAudiobooks.warnings : []}
                 onChange={this.onSearchAudiobooksChange}
               />
             </FormGroup>

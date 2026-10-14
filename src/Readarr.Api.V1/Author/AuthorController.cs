@@ -59,6 +59,7 @@ namespace Readarr.Api.V1.Author
                             AuthorAncestorValidator authorAncestorValidator,
                             SystemFolderValidator systemFolderValidator,
                             QualityProfileExistsValidator qualityProfileExistsValidator,
+                            AudiobookQualityProfileValidator audiobookQualityProfileValidator,
                             MetadataProfileExistsValidator metadataProfileExistsValidator,
                             AuthorFolderAsRootFolderValidator authorFolderAsRootFolderValidator)
             : base(signalRBroadcaster)
@@ -95,6 +96,7 @@ namespace Readarr.Api.V1.Author
                            .Cascade(CascadeMode.Stop)
                            .GreaterThan(0)
                            .SetValidator(qualityProfileExistsValidator)
+                           .SetValidator(audiobookQualityProfileValidator)
                            .When(s => s.SearchAudiobooks);
 
             PostValidator.RuleFor(s => s.Path).IsValidPath().When(s => s.RootFolderPath.IsNullOrWhiteSpace());
