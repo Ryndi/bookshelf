@@ -93,6 +93,15 @@ namespace NzbDrone.Core.Profiles.Qualities
                                   i.GetQualities().Any(q => Quality.IsAudio(q)));
         }
 
+        // The best quality the profile takes in one format. Ebooks are never upgraded to audio, so
+        // in a profile taking both the best ebook is not the profile's last quality.
+        public Quality LastAllowedQuality(bool audio)
+        {
+            return Items.Where(q => q.Allowed)
+                .SelectMany(q => q.GetQualities())
+                .LastOrDefault(q => Quality.IsAudio(q) == audio) ?? LastAllowedQuality();
+        }
+
         public Quality LastAllowedQuality()
         {
             var lastAllowed = Items.Last(q => q.Allowed);

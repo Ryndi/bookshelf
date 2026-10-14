@@ -75,10 +75,14 @@ namespace NzbDrone.Core.DecisionEngine.Specifications.RssSync
                 }
             }
 
-            // If quality meets or exceeds the best allowed quality in the profile accept it immediately
+            var isAudio = Quality.IsAudio(subject.ParsedBookInfo.Quality?.Quality);
+
+            // If quality meets or exceeds the best allowed quality in the profile accept it immediately.
+            // The best of the release's own format - in a profile taking both, the last quality is
+            // audio, and no ebook would ever be best.
             if (delayProfile.BypassIfHighestQuality)
             {
-                var bestQualityInProfile = qualityProfile.LastAllowedQuality();
+                var bestQualityInProfile = qualityProfile.LastAllowedQuality(isAudio);
                 var isBestInProfile = qualityComparer.Compare(subject.ParsedBookInfo.Quality.Quality, bestQualityInProfile) >= 0;
 
                 if (isBestInProfile && isPreferredProtocol)
@@ -103,7 +107,8 @@ namespace NzbDrone.Core.DecisionEngine.Specifications.RssSync
 
             var bookIds = subject.Books.Select(e => e.Id);
 
-            var oldest = _pendingReleaseService.OldestPendingRelease(subject.Author.Id, bookIds.ToArray());
+            // Only a release of the same format waiting out its delay lifts it for this one.
+            var oldest = _pendingReleaseService.OldestPendingRelease(subject.Author.Id, bookIds.ToArray(), isAudio);
 
             if (oldest != null && oldest.Release.AgeMinutes > delay)
             {

@@ -141,6 +141,38 @@ namespace NzbDrone.Core.Test.DecisionEngineTests.RssSync
         }
 
         [Test]
+        public void should_be_true_when_quality_is_the_best_ebook_quality_and_bypass_enabled()
+        {
+            // The profile's last quality is audio, which an ebook is never upgraded to.
+            _delayProfile.UsenetDelay = 720;
+            _delayProfile.BypassIfHighestQuality = true;
+
+            _remoteBook.Release.PublishDate = DateTime.UtcNow;
+            _remoteBook.ParsedBookInfo.Quality = new QualityModel(Quality.AZW3);
+
+            Subject.IsSatisfiedBy(_remoteBook, null).Accepted.Should().BeTrue();
+        }
+
+        [Test]
+        public void should_not_let_an_old_pending_release_of_the_other_format_lift_the_delay()
+        {
+            _delayProfile.UsenetDelay = 720;
+
+            _remoteBook.Release.PublishDate = DateTime.UtcNow;
+            _remoteBook.ParsedBookInfo.Quality = new QualityModel(Quality.MOBI);
+
+            var pendingAudiobook = Builder<RemoteBook>.CreateNew()
+                .With(r => r.Release = new ReleaseInfo { PublishDate = DateTime.UtcNow.AddDays(-1) })
+                .Build();
+
+            Mocker.GetMock<IPendingReleaseService>()
+                  .Setup(s => s.OldestPendingRelease(It.IsAny<int>(), It.IsAny<int[]>(), true))
+                  .Returns(pendingAudiobook);
+
+            Subject.IsSatisfiedBy(_remoteBook, null).Accepted.Should().BeFalse();
+        }
+
+        [Test]
         public void should_be_true_when_release_is_older_than_delay()
         {
             _remoteBook.ParsedBookInfo.Quality = new QualityModel(Quality.MOBI);

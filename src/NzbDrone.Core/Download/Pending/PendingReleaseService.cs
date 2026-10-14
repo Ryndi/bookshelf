@@ -29,7 +29,7 @@ namespace NzbDrone.Core.Download.Pending
         List<Queue.Queue> GetPendingQueue();
         Queue.Queue FindPendingQueueItem(int queueId);
         void RemovePendingQueueItems(int queueId);
-        RemoteBook OldestPendingRelease(int authorId, int[] bookIds);
+        RemoteBook OldestPendingRelease(int authorId, int[] bookIds, bool audio);
     }
 
     public class PendingReleaseService : IPendingReleaseService,
@@ -264,12 +264,15 @@ namespace NzbDrone.Core.Download.Pending
             _repository.DeleteMany(releasesToRemove.Select(c => c.Id));
         }
 
-        public RemoteBook OldestPendingRelease(int authorId, int[] bookIds)
+        // Only releases of one format count, so an old pending release of the other does not lift the
+        // delay for this one.
+        public RemoteBook OldestPendingRelease(int authorId, int[] bookIds, bool audio)
         {
             var authorReleases = GetPendingReleases(authorId);
 
             return authorReleases.Select(r => r.RemoteBook)
-                                 .Where(r => r.Books.Select(e => e.Id).Intersect(bookIds).Any())
+                                 .Where(r => r.Books.Select(e => e.Id).Intersect(bookIds).Any() &&
+                                             Quality.IsAudio(r.ParsedBookInfo.Quality?.Quality) == audio)
                                  .MaxBy(p => p.Release.AgeHours);
         }
 
