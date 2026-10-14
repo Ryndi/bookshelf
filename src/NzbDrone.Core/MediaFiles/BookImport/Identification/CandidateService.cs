@@ -105,6 +105,17 @@ namespace NzbDrone.Core.MediaFiles.BookImport.Identification
                 }
             }
 
+            // Files already on disk are matched alongside the new ones as parts of the same release. An
+            // ebook and an audiobook of a book are not parts of each other, so only files of the
+            // release's own format count. With both counted, an epub scanned beside a tagged audiobook
+            // would be outvoted by the audiobook's tags, and could land on the audiobook's edition.
+            var isAudio = localEdition.LocalBooks.Any(x => MediaFileExtensions.IsAudioFile(x.Path));
+
+            foreach (var candidate in candidateReleases)
+            {
+                candidate.ExistingFiles = candidate.ExistingFiles.Where(f => MediaFileExtensions.IsAudioFile(f.Path) == isAudio).ToList();
+            }
+
             watch.Stop();
             _logger.Debug($"Getting {candidateReleases.Count} candidates from tags for {localEdition.LocalBooks.Count} tracks took {watch.ElapsedMilliseconds}ms");
 
