@@ -79,6 +79,33 @@ namespace NzbDrone.Core.Test.Profiles
         }
 
         [Test]
+        public void should_not_be_able_to_delete_profile_if_used_for_an_authors_audiobooks()
+        {
+            var profile = Builder<QualityProfile>.CreateNew()
+                                          .With(p => p.Id = 2)
+                                          .Build();
+
+            // Deleted, the audiobooks would silently fall back to the main profile, and the author
+            // could not be saved again until another audiobook profile was picked.
+            var authorList = Builder<Author>.CreateListOfSize(3)
+                                            .All()
+                                            .With(c => c.QualityProfileId = 1)
+                                            .With(c => c.AudiobookQualityProfileId = 0)
+                                            .TheFirst(1)
+                                            .With(c => c.AudiobookQualityProfileId = profile.Id)
+                                            .Build().ToList();
+
+            Mocker.GetMock<IAuthorService>().Setup(c => c.GetAllAuthors()).Returns(authorList);
+            Mocker.GetMock<IImportListFactory>().Setup(c => c.All()).Returns(new List<ImportListDefinition>());
+            Mocker.GetMock<IRootFolderService>().Setup(c => c.All()).Returns(new List<RootFolder>());
+            Mocker.GetMock<IProfileRepository>().Setup(c => c.Get(profile.Id)).Returns(profile);
+
+            Assert.Throws<QualityProfileInUseException>(() => Subject.Delete(profile.Id));
+
+            Mocker.GetMock<IProfileRepository>().Verify(c => c.Delete(It.IsAny<int>()), Times.Never());
+        }
+
+        [Test]
         public void should_not_be_able_to_delete_profile_if_assigned_to_import_list()
         {
             var profile = Builder<QualityProfile>.CreateNew()
@@ -148,6 +175,7 @@ namespace NzbDrone.Core.Test.Profiles
             var authorList = Builder<Author>.CreateListOfSize(3)
                                             .All()
                                             .With(c => c.QualityProfileId = 2)
+                                            .With(c => c.AudiobookQualityProfileId = 2)
                                             .Build().ToList();
 
             var importLists = Builder<ImportListDefinition>.CreateListOfSize(2)

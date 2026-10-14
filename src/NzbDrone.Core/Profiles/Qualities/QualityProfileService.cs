@@ -63,7 +63,8 @@ namespace NzbDrone.Core.Profiles.Qualities
 
         public void Delete(int id)
         {
-            if (_authorService.GetAllAuthors().Any(c => c.QualityProfileId == id) ||
+            // An author can use a profile for its audiobooks as well as its main one.
+            if (_authorService.GetAllAuthors().Any(c => c.QualityProfileId == id || c.AudiobookQualityProfileId == id) ||
                 _importListFactory.All().Any(c => c.ProfileId == id) ||
                 _rootFolderService.All().Any(c => c.DefaultQualityProfileId == id))
             {

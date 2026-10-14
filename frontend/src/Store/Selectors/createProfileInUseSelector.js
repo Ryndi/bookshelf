@@ -12,7 +12,10 @@ function createProfileInUseSelector(profileProp) {
         return false;
       }
 
-      if (_.some(author, { [profileProp]: id }) || _.some(lists, { [profileProp]: id })) {
+      // An author can use a quality profile for its audiobooks as well as its main one.
+      const authorProps = profileProp === 'qualityProfileId' ? [profileProp, 'audiobookQualityProfileId'] : [profileProp];
+
+      if (_.some(author, (a) => authorProps.some((prop) => a[prop] === id)) || _.some(lists, { [profileProp]: id })) {
         return true;
       }
 
