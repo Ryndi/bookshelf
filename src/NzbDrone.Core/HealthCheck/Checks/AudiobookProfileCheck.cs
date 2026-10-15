@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NzbDrone.Core.Books;
 using NzbDrone.Core.Books.Events;
+using NzbDrone.Core.Datastore.Events;
 using NzbDrone.Core.Localization;
 using NzbDrone.Core.Profiles.Qualities;
 
@@ -9,10 +10,12 @@ namespace NzbDrone.Core.HealthCheck.Checks
 {
     // An author wanting audiobooks has every one turned away when the profile judging them takes no
     // audio quality, and its books stay on the Missing list for good. Saving an author like that is
-    // refused, but one set up that way already - through the bulk editor, say - is flagged here.
+    // refused, but one left that way by the bulk editor, or by a change to the profile, is flagged here.
     [CheckOn(typeof(AuthorAddedEvent))]
     [CheckOn(typeof(AuthorEditedEvent))]
+    [CheckOn(typeof(AuthorBulkEditedEvent))]
     [CheckOn(typeof(AuthorDeletedEvent), CheckOnCondition.FailedOnly)]
+    [CheckOn(typeof(ModelEvent<QualityProfile>))]
     public class AudiobookProfileCheck : HealthCheckBase
     {
         private readonly IAuthorService _authorService;

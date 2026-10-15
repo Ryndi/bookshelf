@@ -6,6 +6,8 @@ using FluentAssertions;
 using Moq;
 using NUnit.Framework;
 using NzbDrone.Core.Books;
+using NzbDrone.Core.Books.Events;
+using NzbDrone.Core.Messaging.Events;
 using NzbDrone.Core.Organizer;
 using NzbDrone.Core.Test.Framework;
 using NzbDrone.Test.Common;
@@ -35,6 +37,15 @@ namespace NzbDrone.Core.Test.MusicTests.AuthorServiceTests
             Subject.UpdateAuthors(_authors, false);
 
             Mocker.GetMock<IAuthorRepository>().Verify(v => v.UpdateMany(_authors), Times.Once());
+        }
+
+        [Test]
+        public void should_announce_the_authors_saved_together()
+        {
+            Subject.UpdateAuthors(_authors, false);
+
+            Mocker.GetMock<IEventAggregator>()
+                  .Verify(v => v.PublishEvent(It.Is<AuthorBulkEditedEvent>(e => e.Authors == _authors)), Times.Once());
         }
 
         [Test]

@@ -265,6 +265,8 @@ namespace NzbDrone.Core.Books
             _authorRepository.UpdateMany(author);
             _logger.Debug("{0} authors updated", author.Count);
 
+            _eventAggregator.PublishEvent(new AuthorBulkEditedEvent(author));
+
             return author;
         }
     }

@@ -23,6 +23,10 @@ namespace NzbDrone.Core.Profiles.Qualities
             _customFormatService = customFormatService;
         }
 
+        // A change to a profile can leave the authors using it unable to grab anything of a format
+        // they want, which a health check looks for.
+        protected override bool PublishModelEvents => true;
+
         protected override List<QualityProfile> Query(SqlBuilder builder)
         {
             var cfs = _customFormatService.All().ToDictionary(c => c.Id);
