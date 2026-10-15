@@ -15,6 +15,13 @@
     <PackageReference Include="System.IO.Abstractions.TestingHelpers" />
   </ItemGroup>
   <ItemGroup>
+    <!--
+        Moq's Castle.Core brings in the old XML packages, and through them a version of this one with a
+        security advisory. Referencing the fixed version keeps it out of every test build.
+    -->
+    <PackageReference Include="System.Text.RegularExpressions" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\NzbDrone.Common\Readarr.Common.csproj" />
     <ProjectReference Include="..\NzbDrone.Core\Readarr.Core.csproj" />
   </ItemGroup>
