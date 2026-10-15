@@ -1,8 +1,7 @@
-using System.IO;
 using NLog;
 using NzbDrone.Common.Disk;
-using NzbDrone.Common.Extensions;
 using NzbDrone.Core.Books;
+using NzbDrone.Core.Extras.Files;
 using NzbDrone.Core.MediaFiles;
 
 namespace NzbDrone.Core.Extras.Others
@@ -40,7 +39,7 @@ namespace NzbDrone.Core.Extras.Others
                 return;
             }
 
-            var relativePath = author.Path.GetRelativePath(path);
+            var relativePath = author.GetExtraFileRelativePath(path);
             var otherExtraFile = _otherExtraFileService.FindByPath(author.Id, relativePath);
 
             if (otherExtraFile != null)
@@ -65,12 +64,12 @@ namespace NzbDrone.Core.Extras.Others
                 return;
             }
 
-            var relativePath = author.Path.GetRelativePath(path);
+            var relativePath = author.GetExtraFileRelativePath(path);
             var otherExtraFile = _otherExtraFileService.FindByPath(author.Id, relativePath);
 
             if (otherExtraFile != null)
             {
-                var subfolder = Path.GetDirectoryName(relativePath);
+                var subfolder = author.GetRecycleBinSubfolder(_diskProvider, path);
                 _recycleBinProvider.DeleteFile(path, subfolder);
             }
         }

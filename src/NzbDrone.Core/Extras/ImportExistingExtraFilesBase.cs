@@ -19,13 +19,13 @@ namespace NzbDrone.Core.Extras
         }
 
         public abstract int Order { get; }
-        public abstract IEnumerable<ExtraFile> ProcessFiles(Author author, List<string> filesOnDisk, List<string> importedFiles);
+        public abstract IEnumerable<ExtraFile> ProcessFiles(Author author, List<string> scannedFolders, List<string> filesOnDisk, List<string> importedFiles);
 
-        public virtual ImportExistingExtraFileFilterResult<TExtraFile> FilterAndClean(Author author, List<string> filesOnDisk, List<string> importedFiles)
+        public virtual ImportExistingExtraFileFilterResult<TExtraFile> FilterAndClean(Author author, List<string> scannedFolders, List<string> filesOnDisk, List<string> importedFiles)
         {
             var authorFiles = _extraFileService.GetFilesByAuthor(author.Id);
 
-            Clean(author, filesOnDisk, importedFiles, authorFiles);
+            Clean(author, scannedFolders, filesOnDisk, importedFiles, authorFiles);
 
             return Filter(author, filesOnDisk, importedFiles, authorFiles);
         }
@@ -42,12 +42,15 @@ namespace NzbDrone.Core.Extras
             return new ImportExistingExtraFileFilterResult<TExtraFile>(previouslyImported, filteredFiles);
         }
 
-        private void Clean(Author author, List<string> filesOnDisk, List<string> importedFiles, List<TExtraFile> authorFiles)
+        private void Clean(Author author, List<string> scannedFolders, List<string> filesOnDisk, List<string> importedFiles, List<TExtraFile> authorFiles)
         {
             var alreadyImportedFileIds = authorFiles.IntersectBy(f => Path.Combine(author.Path, f.RelativePath), importedFiles, i => i, PathEqualityComparer.Instance)
                 .Select(f => f.Id);
 
-            var deletedFiles = authorFiles.ExceptBy(f => Path.Combine(author.Path, f.RelativePath), filesOnDisk, i => i, PathEqualityComparer.Instance)
+            // Only an extra in a folder that was looked through can be known to be gone. The extras of
+            // an audiobook folder whose drive isn't there just now are left as they are.
+            var deletedFiles = authorFiles.Where(f => scannedFolders.Any(folder => folder.IsParentPath(Path.Combine(author.Path, f.RelativePath))))
+                .ExceptBy(f => Path.Combine(author.Path, f.RelativePath), filesOnDisk, i => i, PathEqualityComparer.Instance)
                 .Select(f => f.Id);
 
             _extraFileService.DeleteMany(alreadyImportedFileIds);

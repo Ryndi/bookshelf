@@ -74,7 +74,7 @@ namespace NzbDrone.Core.Extras.Files
                 AuthorId = author.Id,
                 BookId = bookFile.Edition.Value.BookId,
                 BookFileId = bookFile.Id,
-                RelativePath = author.Path.GetRelativePath(newFileName),
+                RelativePath = author.GetExtraFileRelativePath(newFileName),
                 Extension = extension
             };
         }
@@ -103,7 +103,7 @@ namespace NzbDrone.Core.Extras.Files
                     _logger.Trace("Renaming extra file: {0} to {1}", extraFile, newFileName);
 
                     _diskProvider.MoveFile(existingFileName, newFileName);
-                    extraFile.RelativePath = author.Path.GetRelativePath(newFileName);
+                    extraFile.RelativePath = author.GetExtraFileRelativePath(newFileName);
 
                     _logger.Trace("Renamed extra file from: {0}", extraFile);
 

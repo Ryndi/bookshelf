@@ -28,12 +28,12 @@ namespace NzbDrone.Core.Extras.Others
 
         public override int Order => 2;
 
-        public override IEnumerable<ExtraFile> ProcessFiles(Author author, List<string> filesOnDisk, List<string> importedFiles)
+        public override IEnumerable<ExtraFile> ProcessFiles(Author author, List<string> scannedFolders, List<string> filesOnDisk, List<string> importedFiles)
         {
-            _logger.Debug("Looking for existing extra files in {0}", author.Path);
+            _logger.Debug("Looking for existing extra files in {0}", string.Join(", ", scannedFolders));
 
             var extraFiles = new List<OtherExtraFile>();
-            var filterResult = FilterAndClean(author, filesOnDisk, importedFiles);
+            var filterResult = FilterAndClean(author, scannedFolders, filesOnDisk, importedFiles);
 
             foreach (var possibleExtraFile in filterResult.FilesOnDisk)
             {
@@ -72,7 +72,7 @@ namespace NzbDrone.Core.Extras.Others
                 {
                     AuthorId = author.Id,
                     BookId = localTrack.Book.Id,
-                    RelativePath = author.Path.GetRelativePath(possibleExtraFile),
+                    RelativePath = author.GetExtraFileRelativePath(possibleExtraFile),
                     Extension = extension
                 };
 

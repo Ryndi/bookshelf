@@ -35,12 +35,12 @@ namespace NzbDrone.Core.Extras.Metadata
 
         public override int Order => 0;
 
-        public override IEnumerable<ExtraFile> ProcessFiles(Author author, List<string> filesOnDisk, List<string> importedFiles)
+        public override IEnumerable<ExtraFile> ProcessFiles(Author author, List<string> scannedFolders, List<string> filesOnDisk, List<string> importedFiles)
         {
             _logger.Debug("Looking for existing metadata in {0}", author.Path);
 
             var metadataFiles = new List<MetadataFile>();
-            var filterResult = FilterAndClean(author, filesOnDisk, importedFiles);
+            var filterResult = FilterAndClean(author, scannedFolders, filesOnDisk, importedFiles);
 
             foreach (var possibleMetadataFile in filterResult.FilesOnDisk)
             {

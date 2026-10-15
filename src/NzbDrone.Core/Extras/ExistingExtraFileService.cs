@@ -2,7 +2,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NLog;
+using NzbDrone.Common;
 using NzbDrone.Common.Disk;
+using NzbDrone.Common.Extensions;
 using NzbDrone.Core.Extras.Files;
 using NzbDrone.Core.MediaFiles;
 using NzbDrone.Core.MediaFiles.Events;
@@ -33,22 +35,34 @@ namespace NzbDrone.Core.Extras
             var author = message.Author;
             var extraFiles = new List<ExtraFile>();
 
-            if (!_diskProvider.FolderExists(author.Path))
+            // Audiobooks kept under a root of their own have their extras beside them there. A folder
+            // that isn't on disk is left out, so its extras aren't taken to be gone.
+            var authorFolders = new[] { author.Path, author.AudiobookPath }
+                .Where(f => f.IsNotNullOrWhiteSpace() && _diskProvider.FolderExists(f))
+                .Distinct(PathEqualityComparer.Instance)
+                .ToList();
+
+            if (!authorFolders.Any())
             {
                 return;
             }
 
-            _logger.Debug("Looking for existing extra files in {0}", author.Path);
+            var possibleExtraFiles = new List<string>();
 
-            var filesOnDisk = _diskScanService.GetNonBookFiles(author.Path);
-            var possibleExtraFiles = _diskScanService.FilterPaths(author.Path, filesOnDisk);
+            foreach (var authorFolder in authorFolders)
+            {
+                _logger.Debug("Looking for existing extra files in {0}", authorFolder);
 
-            var filteredFiles = possibleExtraFiles;
+                var filesOnDisk = _diskScanService.GetNonBookFiles(authorFolder);
+                possibleExtraFiles.AddRange(_diskScanService.FilterPaths(authorFolder, filesOnDisk));
+            }
+
+            var filteredFiles = possibleExtraFiles.Distinct(PathEqualityComparer.Instance).ToList();
             var importedFiles = new List<string>();
 
             foreach (var existingExtraFileImporter in _existingExtraFileImporters)
             {
-                var imported = existingExtraFileImporter.ProcessFiles(author, filteredFiles, importedFiles);
+                var imported = existingExtraFileImporter.ProcessFiles(author, authorFolders, filteredFiles, importedFiles);
 
                 importedFiles.AddRange(imported.Select(f => Path.Combine(author.Path, f.RelativePath)));
             }
