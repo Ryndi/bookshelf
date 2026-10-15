@@ -33,6 +33,16 @@
     <PackageReference Include="PdfSharpCore" />
   </ItemGroup>
   <ItemGroup>
+    <!--
+        Packages that only come in through others, referenced here to lift them past security
+        advisories their parents have not caught up with: Pkcs through MimeKit, and the token
+        libraries through Microsoft.Data.SqlClient. Drop each once its parent brings a fixed version.
+    -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\NzbDrone.Common\Readarr.Common.csproj" />
   </ItemGroup>
   <ItemGroup>
