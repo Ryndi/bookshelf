@@ -2,9 +2,11 @@ using System.Collections.Generic;
 using System.Linq;
 using NzbDrone.Common.Cache;
 using NzbDrone.Core.Books.Events;
+using NzbDrone.Core.Datastore.Events;
 using NzbDrone.Core.MediaFiles.Events;
 using NzbDrone.Core.Messaging;
 using NzbDrone.Core.Messaging.Events;
+using NzbDrone.Core.Profiles.Qualities;
 
 namespace NzbDrone.Core.AuthorStats
 {
@@ -17,7 +19,10 @@ namespace NzbDrone.Core.AuthorStats
     public class AuthorStatisticsService : IAuthorStatisticsService,
         IHandle<AuthorAddedEvent>,
         IHandle<AuthorUpdatedEvent>,
+        IHandle<AuthorEditedEvent>,
+        IHandle<AuthorBulkEditedEvent>,
         IHandle<AuthorDeletedEvent>,
+        IHandle<ModelEvent<QualityProfile>>,
         IHandle<BookAddedEvent>,
         IHandle<BookDeletedEvent>,
         IHandle<BookImportedEvent>,
@@ -88,11 +93,39 @@ namespace NzbDrone.Core.AuthorStats
             _cache.Remove(message.Author.Id.ToString());
         }
 
+        // Which formats an author's books want comes from the author's audiobook setting and quality
+        // profile, so the counts change with them. The author's own handler sends the updated author
+        // to the UI, and runs after this one.
+        [EventHandleOrder(EventHandleOrder.First)]
+        public void Handle(AuthorEditedEvent message)
+        {
+            _cache.Remove("AllAuthors");
+            _cache.Remove(message.Author.Id.ToString());
+        }
+
+        [EventHandleOrder(EventHandleOrder.First)]
+        public void Handle(AuthorBulkEditedEvent message)
+        {
+            _cache.Remove("AllAuthors");
+
+            foreach (var author in message.Authors)
+            {
+                _cache.Remove(author.Id.ToString());
+            }
+        }
+
         [EventHandleOrder(EventHandleOrder.First)]
         public void Handle(AuthorDeletedEvent message)
         {
             _cache.Remove("AllAuthors");
             _cache.Remove(message.Author.Id.ToString());
+        }
+
+        // Any number of authors may be judged by the profile, so every count is dropped.
+        [EventHandleOrder(EventHandleOrder.First)]
+        public void Handle(ModelEvent<QualityProfile> message)
+        {
+            _cache.Clear();
         }
 
         [EventHandleOrder(EventHandleOrder.First)]
