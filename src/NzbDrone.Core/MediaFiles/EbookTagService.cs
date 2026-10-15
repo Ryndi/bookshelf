@@ -16,7 +16,7 @@ using NzbDrone.Core.MediaFiles.Commands;
 using NzbDrone.Core.Parser.Model;
 using NzbDrone.Core.Qualities;
 using NzbDrone.Core.RootFolders;
-using PdfSharpCore.Pdf.IO;
+using UglyToad.PdfPig;
 using VersOne.Epub;
 using VersOne.Epub.Schema;
 
@@ -355,13 +355,19 @@ namespace NzbDrone.Core.MediaFiles
 
             try
             {
-                var book = PdfReader.Open(file, PdfDocumentOpenMode.InformationOnly);
-                if (book.Info != null)
-                {
-                    result.Authors = new List<string> { book.Info.Author };
-                    result.BookTitle = book.Info.Title;
+                // On a seekable stream PdfPig reads what it needs from the file instead of copying all
+                // of it into memory, and the document information needs very little of it.
+                using var stream = File.OpenRead(file);
+                using var book = PdfDocument.Open(stream);
 
-                    _logger.Trace(book.Info.ToJson());
+                var info = book.Information;
+
+                if (info != null)
+                {
+                    result.Authors = new List<string> { info.Author ?? string.Empty };
+                    result.BookTitle = info.Title ?? string.Empty;
+
+                    _logger.Trace("Read pdf title '{0}' by '{1}'", info.Title, info.Author);
                 }
             }
             catch (Exception e)

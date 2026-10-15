@@ -31,7 +31,7 @@
     <PackageReference Include="NetVips.Native" />
     <PackageReference Include="Equ" />
     <PackageReference Include="MonoTorrent" />
-    <PackageReference Include="PdfSharpCore" />
+    <PackageReference Include="PdfPig" />
   </ItemGroup>
   <ItemGroup>
     <!--

@@ -741,16 +741,6 @@
           "System.Security.Permissions": "4.7.0"
         }
       },
-      "SixLabors.Fonts": {
-        "type": "Transitive",
-        "resolved": "1.0.0-beta17",
-        "contentHash": "qubgVovAoSR7vyv9tJ68gSzRIPWz7HBjTM9rwAaLjpcJ6T50arnX+GHAZcC0r2mVagyRMknCNda3DGoe8StUUQ=="
-      },
-      "SixLabors.ImageSharp": {
-        "type": "Transitive",
-        "resolved": "1.0.4",
-        "contentHash": "H2rPiEr2ddBOltOuqRYhpLBAsQXDAhbzMMhhuksnBG2oefup1MXMchALe7yYkKJksNbtxbZHKeM6dn/68I75qw=="
-      },
       "Swashbuckle.AspNetCore.Swagger": {
         "type": "Transitive",
         "resolved": "6.6.2",
@@ -1386,7 +1376,7 @@
           "NetVips.Native": "[8.18.7, )",
           "Newtonsoft.Json": "[13.0.3, )",
           "Npgsql": "[7.0.10, )",
-          "PdfSharpCore": "[1.3.65, )",
+          "PdfPig": "[0.1.16, )",
           "Polly": "[8.5.2, )",
           "Readarr.Common": "[1.0.0, )",
           "RestSharp": "[106.15.0, )",
@@ -1756,16 +1746,11 @@
           "System.Runtime.CompilerServices.Unsafe": "6.0.0"
         }
       },
-      "PdfSharpCore": {
+      "PdfPig": {
         "type": "CentralTransitive",
-        "requested": "[1.3.65, )",
-        "resolved": "1.3.65",
-        "contentHash": "mkN1EZ1VtH4+x97DEvmno5goRU3j4myuWD7IxO9MuxRcc1iOcUfhq75RmxZSAH9dQCZhpGpLUJSkwlRRnzElAg==",
-        "dependencies": {
-          "SharpZipLib": "1.4.2",
-          "SixLabors.Fonts": "1.0.0-beta17",
-          "SixLabors.ImageSharp": "1.0.4"
-        }
+        "requested": "[0.1.16, )",
+        "resolved": "0.1.16",
+        "contentHash": "qQcbsNMYVY+K5ELptax2S8thNMk0+rSQq3H/KdYj3LLcko8yTCz8y5KIvsKxIyAuTN0ZYNnfsZkM+0EvxTwHVA=="
       },
       "Polly": {
         "type": "CentralTransitive",
