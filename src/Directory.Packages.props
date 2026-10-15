@@ -34,6 +34,8 @@
     <PackageVersion Include="Moq" Version="4.17.2" />
     <PackageVersion Include="MonoTorrent" Version="2.0.7" />
     <PackageVersion Include="NBuilder" Version="6.1.0" />
+    <PackageVersion Include="NetVips" Version="3.2.0" />
+    <PackageVersion Include="NetVips.Native" Version="8.18.7" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="NLog.Extensions.Logging" Version="5.2.3" />
     <PackageVersion Include="NLog" Version="5.1.4" />
@@ -48,7 +50,6 @@
     <PackageVersion Include="Selenium.Support" Version="3.141.0" />
     <PackageVersion Include="Selenium.WebDriver.ChromeDriver" Version="134.0.6998.16500" />
     <PackageVersion Include="SharpZipLib" Version="1.4.2" />
-    <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.11" />
     <PackageVersion Include="StyleCop.Analyzers" Version="1.1.118" />
     <PackageVersion Include="Swashbuckle.AspNetCore.Annotations" Version="6.6.2" />
     <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.6.2" />

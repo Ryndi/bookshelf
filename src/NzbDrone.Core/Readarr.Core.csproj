@@ -27,7 +27,8 @@
     <PackageReference Include="RestSharp" />
     <PackageReference Include="System.IO.Abstractions" />
     <PackageReference Include="TagLibSharp-Lidarr" />
-    <PackageReference Include="SixLabors.ImageSharp" />
+    <PackageReference Include="NetVips" />
+    <PackageReference Include="NetVips.Native" />
     <PackageReference Include="Equ" />
     <PackageReference Include="MonoTorrent" />
     <PackageReference Include="PdfSharpCore" />

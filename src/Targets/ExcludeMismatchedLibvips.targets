@@ -1,0 +1,17 @@
+<Project>
+  <!--
+      NetVips.Native's glibc builds of libvips also match a musl RID through the RID fallback, so a
+      musl output is handed two copies of libvips.so.42 and keeps one of them by package order. For
+      linux-musl-arm64 that was the glibc one, which can't load on Alpine, and covers went
+      unresized. Leaving the glibc build out keeps the musl one, or lets a system libvips be found
+      where NetVips.Native has no musl build.
+  -->
+  <Target Name="ExcludeMismatchedLibvips" AfterTargets="ResolvePackageAssets" Condition="$(RuntimeIdentifier.StartsWith('linux-musl-'))">
+    <PropertyGroup>
+      <_GlibcLibvipsPackageId>NetVips.Native.$(RuntimeIdentifier.Replace('linux-musl-', 'linux-'))</_GlibcLibvipsPackageId>
+    </PropertyGroup>
+    <ItemGroup>
+      <NativeCopyLocalItems Remove="@(NativeCopyLocalItems)" Condition="'%(NativeCopyLocalItems.NuGetPackageId)' == '$(_GlibcLibvipsPackageId)'" />
+    </ItemGroup>
+  </Target>
+</Project>
