@@ -124,6 +124,7 @@ class BookIndexPoster extends Component {
       sizeOnDisk,
       bookFileCount,
       totalBookCount,
+      ebookCount,
       availableEbookCount,
       audiobookCount,
       availableAudiobookCount
@@ -228,6 +229,7 @@ class BookIndexPoster extends Component {
             bookCount={bookCount}
             bookFileCount={bookFileCount}
             totalBookCount={totalBookCount}
+            ebookCount={ebookCount}
             availableEbookCount={availableEbookCount}
             audiobookCount={audiobookCount}
             availableAudiobookCount={availableAudiobookCount}

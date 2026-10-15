@@ -114,6 +114,7 @@ class AuthorIndexRow extends Component {
       availableBookCount = 0,
       bookFileCount = 0,
       totalBookCount = 0,
+      ebookCount = 0,
       availableEbookCount = 0,
       audiobookCount = 0,
       availableAudiobookCount = 0,
@@ -289,15 +290,15 @@ class AuthorIndexRow extends Component {
               );
             }
 
-            // Once a book wants an audiobook each format gets its own bar, as under the posters. A
+            // Once the books want both formats each gets its own bar, as under the posters. A
             // single bar would read as complete while a whole format is still missing.
-            if (name === 'bookProgress' && audiobookCount) {
+            if (name === 'bookProgress' && audiobookCount && ebookCount) {
               const formats = [
                 {
                   key: 'ebook',
                   label: translate('Ebook'),
                   available: availableEbookCount,
-                  total: bookCount
+                  total: ebookCount
                 },
                 {
                   key: 'audiobook',
@@ -334,7 +335,11 @@ class AuthorIndexRow extends Component {
             }
 
             if (name === 'bookProgress') {
-              const progress = bookCount ? (availableBookCount / bookCount) * 100 : 100;
+              // An audiobook library - a profile taking no ebook at all - counts its audiobooks.
+              const audiobooksOnly = audiobookCount > 0;
+              const available = audiobooksOnly ? availableAudiobookCount : availableBookCount;
+              const total = audiobooksOnly ? audiobookCount : bookCount;
+              const progress = total ? (available / total) * 100 : 100;
 
               return (
                 <VirtualTableRowCell
@@ -345,8 +350,8 @@ class AuthorIndexRow extends Component {
                     progress={progress}
                     kind={getProgressBarKind(status, monitored, progress)}
                     showText={true}
-                    text={`${availableBookCount} / ${bookCount}`}
-                    title={translate('AuthorProgressBarText', { bookCount, availableBookCount, bookFileCount, totalBookCount })}
+                    text={`${available} / ${total}`}
+                    title={translate('AuthorProgressBarText', { bookCount: total, availableBookCount: available, bookFileCount, totalBookCount })}
                     width={125}
                   />
                 </VirtualTableRowCell>

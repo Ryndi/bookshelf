@@ -9,8 +9,9 @@ namespace Readarr.Api.V1.Books
         public int TotalBookCount { get; set; }
 
         // Which formats the book actually holds, so a client can say what is still missing
-        // rather than only that something is. AudiobookCount is zero unless the book wants an
-        // audiobook at all.
+        // rather than only that something is. EbookCount and AudiobookCount are zero unless the
+        // book wants that format at all.
+        public int EbookCount { get; set; }
         public int AvailableEbookCount { get; set; }
         public int AudiobookCount { get; set; }
         public int AvailableAudiobookCount { get; set; }
@@ -45,6 +46,7 @@ namespace Readarr.Api.V1.Books
                 BookCount = model.BookCount,
                 SizeOnDisk = model.SizeOnDisk,
                 TotalBookCount = model.TotalBookCount,
+                EbookCount = model.EbookCount,
                 AvailableEbookCount = model.AvailableEbookCount,
                 AudiobookCount = model.AudiobookCount,
                 AvailableAudiobookCount = model.AvailableAudiobookCount

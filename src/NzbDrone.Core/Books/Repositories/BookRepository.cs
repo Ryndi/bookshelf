@@ -126,27 +126,15 @@ namespace NzbDrone.Core.Books
 
         // A book is wanted while it is missing an ebook, or - when audiobooks are switched on for
         // it - while it is missing an audiobook. Owning one format no longer satisfies the other.
-        // An author whose profile takes no ebook at all wants audiobooks instead: an audiobook
-        // library from before audiobooks had a setting of their own, where wanting an ebook would
-        // put every book on the list for a format its profile can never grab. This matches
-        // Author.WantsEbooks and Author.WantsAudiobooks.
+        // An author whose profile takes no ebook at all wants audiobooks instead, where wanting an
+        // ebook would put every book on the list for a format its profile can never grab.
         private string BuildMissingFormatWhereClause(List<int> audiobookOnlyProfileIds)
         {
             var isTrue = _database.DatabaseType == DatabaseType.PostgreSQL ? "true" : "1";
-            var audiobookOnly = audiobookOnlyProfileIds.Any()
-                ? $"\"Authors\".\"QualityProfileId\" IN ({string.Join(", ", audiobookOnlyProfileIds)})"
-                : "1 = 0";
+            var audiobookOnly = AudiobookOnlyProfiles.AuthorIsAudiobookOnlySql(audiobookOnlyProfileIds);
             var wantsAudiobooks = $"(COALESCE(\"Books\".\"SearchAudiobooks\", \"Authors\".\"SearchAudiobooks\") = {isTrue} OR {audiobookOnly})";
 
             return $"((NOT ({audiobookOnly}) AND NOT EXISTS {HasFileOfFormatSubquery(false)}) OR ({wantsAudiobooks} AND NOT EXISTS {HasFileOfFormatSubquery(true)}))";
-        }
-
-        private List<int> AudiobookOnlyProfileIds()
-        {
-            return _database.Query<QualityProfile>(new SqlBuilder(_database.DatabaseType))
-                .Where(p => !p.Allows(false))
-                .Select(p => p.Id)
-                .ToList();
         }
 
         private string HasFileOfFormatSubquery(bool audio)
@@ -164,7 +152,7 @@ namespace NzbDrone.Core.Books
         public PagingSpec<Book> BooksWithoutFiles(PagingSpec<Book> pagingSpec)
         {
             var currentTime = DateTime.UtcNow;
-            var audiobookOnlyProfileIds = AudiobookOnlyProfileIds();
+            var audiobookOnlyProfileIds = _database.AudiobookOnlyProfileIds();
 
             pagingSpec.Records = GetPagedRecords(BooksWithoutFilesBuilder(currentTime, audiobookOnlyProfileIds), pagingSpec, PagedQuery);
             pagingSpec.TotalRecords = GetPagedRecordCount(BooksWithoutFilesBuilder(currentTime, audiobookOnlyProfileIds).SelectCountDistinct<Book>(x => x.Id), pagingSpec);

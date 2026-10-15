@@ -14,6 +14,7 @@ function AuthorIndexProgressBar(props) {
     availableBookCount,
     bookFileCount,
     totalBookCount,
+    ebookCount,
     availableEbookCount,
     audiobookCount,
     availableAudiobookCount,
@@ -21,10 +22,13 @@ function AuthorIndexProgressBar(props) {
     detailedProgressBar
   } = props;
 
-  // No book here wants an audiobook, so a single bar still says everything there is to say.
-  if (!audiobookCount) {
-    const progress = bookCount ? (availableBookCount / bookCount) * 100 : 100;
-    const text = `${availableBookCount} / ${bookCount}`;
+  // While the books want one format only, a single bar still says everything there is to say.
+  // An audiobook library - a profile taking no ebook at all - counts its audiobooks on it.
+  if (!audiobookCount || !ebookCount) {
+    const audiobooksOnly = audiobookCount > 0;
+    const available = audiobooksOnly ? availableAudiobookCount : availableBookCount;
+    const total = audiobooksOnly ? audiobookCount : bookCount;
+    const progress = total ? (available / total) * 100 : 100;
 
     return (
       <ProgressBar
@@ -34,21 +38,21 @@ function AuthorIndexProgressBar(props) {
         kind={getProgressBarKind(status, monitored, progress)}
         size={detailedProgressBar ? sizes.MEDIUM : sizes.SMALL}
         showText={detailedProgressBar}
-        text={text}
-        title={translate('AuthorProgressBarText', { bookCount, availableBookCount, bookFileCount, totalBookCount })}
+        text={`${available} / ${total}`}
+        title={translate('AuthorProgressBarText', { bookCount: total, availableBookCount: available, bookFileCount, totalBookCount })}
         width={posterWidth}
       />
     );
   }
 
   // Each format gets its own bar. A combined one would read as complete while a whole format
-  // is still missing. The audiobook total is its own, since only some books may want one.
+  // is still missing. Each total is its own, since only some books may want an audiobook.
   const formats = [
     {
       key: 'ebook',
       label: translate('Ebook'),
       available: availableEbookCount,
-      total: bookCount
+      total: ebookCount
     },
     {
       key: 'audiobook',
@@ -91,6 +95,7 @@ AuthorIndexProgressBar.propTypes = {
   availableBookCount: PropTypes.number.isRequired,
   bookFileCount: PropTypes.number.isRequired,
   totalBookCount: PropTypes.number.isRequired,
+  ebookCount: PropTypes.number,
   availableEbookCount: PropTypes.number,
   audiobookCount: PropTypes.number,
   availableAudiobookCount: PropTypes.number,
@@ -99,6 +104,7 @@ AuthorIndexProgressBar.propTypes = {
 };
 
 AuthorIndexProgressBar.defaultProps = {
+  ebookCount: 0,
   availableEbookCount: 0,
   audiobookCount: 0,
   availableAudiobookCount: 0

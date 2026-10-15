@@ -12,6 +12,7 @@ function BookIndexProgressBar(props) {
     bookCount,
     bookFileCount,
     totalBookCount,
+    ebookCount,
     availableEbookCount,
     audiobookCount,
     availableAudiobookCount,
@@ -19,9 +20,9 @@ function BookIndexProgressBar(props) {
     detailedProgressBar
   } = props;
 
-  // A book wanting an audiobook as well is complete only once it holds both formats. Counted by
-  // files alone, holding the ebook would show it as done with the audiobook still missing.
-  if (audiobookCount) {
+  // A book wanting both formats is complete only once it holds both. Counted by files alone,
+  // holding the ebook would show it as done with the audiobook still missing.
+  if (ebookCount && audiobookCount) {
     const ebooks = availableEbookCount ? 1 : 0;
     const audiobooks = availableAudiobookCount ? 1 : 0;
     const formatProgress = ((ebooks + audiobooks) / 2) * 100;
@@ -68,6 +69,7 @@ BookIndexProgressBar.propTypes = {
   bookCount: PropTypes.number.isRequired,
   bookFileCount: PropTypes.number.isRequired,
   totalBookCount: PropTypes.number.isRequired,
+  ebookCount: PropTypes.number,
   availableEbookCount: PropTypes.number,
   audiobookCount: PropTypes.number,
   availableAudiobookCount: PropTypes.number,
@@ -76,6 +78,7 @@ BookIndexProgressBar.propTypes = {
 };
 
 BookIndexProgressBar.defaultProps = {
+  ebookCount: 0,
   availableEbookCount: 0,
   audiobookCount: 0,
   availableAudiobookCount: 0

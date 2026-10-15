@@ -5,6 +5,7 @@ using Dapper;
 using NzbDrone.Core.Books;
 using NzbDrone.Core.Datastore;
 using NzbDrone.Core.MediaFiles;
+using NzbDrone.Core.Profiles.Qualities;
 using NzbDrone.Core.Qualities;
 
 namespace NzbDrone.Core.AuthorStats
@@ -50,7 +51,12 @@ namespace NzbDrone.Core.AuthorStats
         {
             var trueIndicator = _database.DatabaseType == DatabaseType.PostgreSQL ? "true" : "1";
             var counted = $@"(""Books"".""Monitored"" = {trueIndicator} AND (""Books"".""ReleaseDate"" < @currentDate) OR ""Books"".""ReleaseDate"" IS NULL) OR MIN(""BookFiles"".""Id"") IS NOT NULL";
-            var wantsAudiobooks = $@"COALESCE(""Books"".""SearchAudiobooks"", ""Authors"".""SearchAudiobooks"") = {trueIndicator}";
+
+            // The formats a book wants, by the rule the Wanted list goes by: an ebook unless the
+            // author's profile takes none, and an audiobook when switched on or when it is all the
+            // profile takes. Counted otherwise, an audiobook library's ebook bar never filled.
+            var audiobookOnly = AudiobookOnlyProfiles.AuthorIsAudiobookOnlySql(_database.AudiobookOnlyProfileIds());
+            var wantsAudiobooks = $@"(COALESCE(""Books"".""SearchAudiobooks"", ""Authors"".""SearchAudiobooks"") = {trueIndicator} OR {audiobookOnly})";
 
             return new SqlBuilder(_database.DatabaseType)
             .Select($@"""Authors"".""Id"" AS ""AuthorId"",
@@ -60,6 +66,7 @@ namespace NzbDrone.Core.AuthorStats
                      CASE WHEN MIN(""BookFiles"".""Id"") IS NULL THEN 0 ELSE 1 END AS ""AvailableBookCount"",
                      CASE WHEN {counted} THEN 1 ELSE 0 END AS ""BookCount"",
                      CASE WHEN MIN(""BookFiles"".""Id"") IS NULL THEN 0 ELSE COUNT(""BookFiles"".""Id"") END AS ""BookFileCount"",
+                     CASE WHEN NOT ({audiobookOnly}) AND ({counted}) THEN 1 ELSE 0 END AS ""EbookCount"",
                      CASE WHEN EXISTS {HasFileOfFormatSubquery(false)} THEN 1 ELSE 0 END AS ""AvailableEbookCount"",
                      CASE WHEN {wantsAudiobooks} AND ({counted}) THEN 1 ELSE 0 END AS ""AudiobookCount"",
                      CASE WHEN {wantsAudiobooks} AND EXISTS {HasFileOfFormatSubquery(true)} THEN 1 ELSE 0 END AS ""AvailableAudiobookCount""")

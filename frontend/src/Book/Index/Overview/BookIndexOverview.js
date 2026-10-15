@@ -131,6 +131,7 @@ class BookIndexOverview extends Component {
       sizeOnDisk,
       bookFileCount,
       totalBookCount,
+      ebookCount,
       availableEbookCount,
       audiobookCount,
       availableAudiobookCount
@@ -198,6 +199,7 @@ class BookIndexOverview extends Component {
               bookCount={bookCount}
               bookFileCount={bookFileCount}
               totalBookCount={totalBookCount}
+              ebookCount={ebookCount}
               availableEbookCount={availableEbookCount}
               audiobookCount={audiobookCount}
               availableAudiobookCount={availableAudiobookCount}

@@ -7,6 +7,8 @@ using NUnit.Framework;
 using NzbDrone.Core.AuthorStats;
 using NzbDrone.Core.Books;
 using NzbDrone.Core.MediaFiles;
+using NzbDrone.Core.Profiles;
+using NzbDrone.Core.Profiles.Qualities;
 using NzbDrone.Core.Qualities;
 using NzbDrone.Core.Test.Framework;
 
@@ -106,6 +108,52 @@ namespace NzbDrone.Core.Test.AuthorStatsTests
 
             stats.Should().HaveCount(1);
             stats.First().SizeOnDisk.Should().Be(_bookFiles[0].Size);
+        }
+
+        private void GivenWantedBookJudgedBy(params Quality[] allowed)
+        {
+            var profile = new QualityProfile
+            {
+                Name = "Profile",
+                Items = Qualities.QualityFixture.GetDefaultQualities(allowed),
+                Cutoff = allowed.First().Id,
+                FormatItems = new List<ProfileFormatItem>()
+            };
+
+            Db.Insert(profile);
+
+            _author.QualityProfileId = profile.Id;
+            _author.SearchAudiobooks = false;
+            Db.Update(_author);
+
+            _book.Monitored = true;
+            Db.Update(_book);
+        }
+
+        [Test]
+        public void should_not_want_an_ebook_from_an_author_whose_profile_takes_none()
+        {
+            GivenWantedBookJudgedBy(Quality.MP3, Quality.M4B);
+            GivenBookFile();
+
+            var stats = Subject.AuthorStatistics().Single();
+
+            stats.BookCount.Should().Be(1);
+            stats.EbookCount.Should().Be(0);
+            stats.AudiobookCount.Should().Be(1);
+            stats.AvailableAudiobookCount.Should().Be(1);
+        }
+
+        [Test]
+        public void should_want_only_an_ebook_from_an_author_whose_profile_takes_one()
+        {
+            GivenWantedBookJudgedBy(Quality.EPUB);
+
+            var stats = Subject.AuthorStatistics().Single();
+
+            stats.BookCount.Should().Be(1);
+            stats.EbookCount.Should().Be(1);
+            stats.AudiobookCount.Should().Be(0);
         }
 
         [Test]

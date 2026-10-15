@@ -12,8 +12,9 @@ namespace NzbDrone.Core.AuthorStats
         public int TotalBookCount { get; set; }
 
         // Counted separately from AvailableBookCount, which is satisfied by a file of either
-        // format. AudiobookCount only counts books that actually want an audiobook, so it is
-        // the denominator for audiobook progress rather than the book count.
+        // format. EbookCount and AudiobookCount only count books that actually want that format,
+        // so they are the denominators for each format's progress rather than the book count.
+        public int EbookCount { get; set; }
         public int AvailableEbookCount { get; set; }
         public int AudiobookCount { get; set; }
         public int AvailableAudiobookCount { get; set; }

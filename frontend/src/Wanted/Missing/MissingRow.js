@@ -14,16 +14,17 @@ import translate from 'Utilities/String/translate';
 import styles from './MissingRow.css';
 
 // A book lands here for missing an ebook, or a missing audiobook when it wants one, or both.
-// The row otherwise says only that something is missing, not which. A book tracking one format
-// has nothing to tell apart - and in an audiobook library, that format is not the ebook.
+// The row otherwise says only that something is missing, not which. A book wanting a single
+// format has nothing to tell apart - and in an audiobook library, that format is not the ebook.
 function missingFormats(statistics) {
   const {
+    ebookCount = 0,
     availableEbookCount = 0,
     audiobookCount = 0,
     availableAudiobookCount = 0
   } = statistics || {};
 
-  if (!audiobookCount) {
+  if (!ebookCount || !audiobookCount) {
     return [];
   }
 
@@ -33,7 +34,7 @@ function missingFormats(statistics) {
     formats.push(translate('Ebook'));
   }
 
-  if (audiobookCount > 0 && !availableAudiobookCount) {
+  if (!availableAudiobookCount) {
     formats.push(translate('Audiobook'));
   }
 

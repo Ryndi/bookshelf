@@ -117,6 +117,7 @@ class AuthorIndexOverview extends Component {
       availableBookCount = 0,
       bookFileCount = 0,
       totalBookCount = 0,
+      ebookCount = 0,
       availableEbookCount = 0,
       audiobookCount = 0,
       availableAudiobookCount = 0,
@@ -186,6 +187,7 @@ class AuthorIndexOverview extends Component {
               availableBookCount={availableBookCount}
               bookFileCount={bookFileCount}
               totalBookCount={totalBookCount}
+              ebookCount={ebookCount}
               availableEbookCount={availableEbookCount}
               audiobookCount={audiobookCount}
               availableAudiobookCount={availableAudiobookCount}
