@@ -7,6 +7,7 @@
   <ItemGroup>
     <PackageReference Include="DryIoc.dll" />
     <PackageReference Include="IPAddressRange" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" VersionOverride="6.0.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
 	<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
     <PackageReference Include="NLog.Extensions.Logging" />
