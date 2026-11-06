@@ -94,6 +94,18 @@ module.exports = (env) => {
     optimization: {
       moduleIds: 'deterministic',
       chunkIds: isProduction ? 'deterministic' : 'named',
+      // Only JavaScript. From 5.111 webpack's default minimizer also minifies index.html and
+      // strips the quotes around its attributes, and HtmlMapperBase rewrites only quoted ones.
+      // These are webpack's own default Terser options.
+      minimizer: [
+        new TerserPlugin({
+          terserOptions: {
+            compress: {
+              passes: 2,
+            },
+          },
+        }),
+      ],
     },
 
     performance: {
