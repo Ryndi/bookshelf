@@ -22,6 +22,25 @@ updates:
       - dependency-name: "*"
         update-types:
           - "version-update:semver-major"
+      # From these versions on, each package needs a change of its own, and one package
+      # that fails the build holds back the whole group. These are upgraded by hand too.
+      # MailKit 4.18 needs the 10.0 System packages (Pkcs, CodePages, Asn1), above our pins.
+      - dependency-name: "Mailkit"
+        versions: [">= 4.18.0"]
+      # Moq 4.18 moves to Castle.Core 5, which uncovers coverlet.collector's preview pins.
+      - dependency-name: "Moq"
+        versions: [">= 4.18.0"]
+      # NLog 5.2 makes LogManager.ConfigurationReloaded obsolete, which DatabaseTarget
+      # uses, and warnings are errors here. NLog.Extensions.Logging 5.3 needs that NLog.
+      - dependency-name: "NLog"
+        versions: [">= 5.2.0"]
+      - dependency-name: "NLog.Extensions.Logging"
+        versions: [">= 5.3.0"]
+      # 17.2.26 makes FromDirectoryName and FromFileName obsolete, with 14 uses here.
+      - dependency-name: "System.IO.Abstractions"
+        versions: [">= 17.2.26"]
+      - dependency-name: "System.IO.Abstractions.TestingHelpers"
+        versions: [">= 17.2.26"]
 
   - package-ecosystem: "npm"
     directory: "/"
