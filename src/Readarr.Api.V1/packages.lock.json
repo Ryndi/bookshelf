@@ -35,9 +35,9 @@
       },
       "StyleCop.Analyzers": {
         "type": "Direct",
-        "requested": "[1.1.118, )",
-        "resolved": "1.1.118",
-        "contentHash": "Onx6ovGSqXSK07n/0eM3ZusiNdB6cIlJdabQhWGgJp3Vooy9AaLS/tigeybOJAobqbtggTamoWndz72JscZBvw=="
+        "requested": "[1.3.180, )",
+        "resolved": "1.3.180",
+        "contentHash": "/TDyrO3tUJOsnyTazvaX+qwwBt4aixQLNLtxmkyWQZE94IOZ9PnClHrwKUVn/NSXdXUUWrKMHTtlxUkZ1F8JWg=="
       },
       "Swashbuckle.AspNetCore.Annotations": {
         "type": "Direct",
@@ -488,8 +488,8 @@
       },
       "Polly.Core": {
         "type": "Transitive",
-        "resolved": "8.9.0",
-        "contentHash": "Imm3q+XvH+8fiOdCkp+GggDQuxN3e4VznbRxODjjJxCurmAIfUEO4dKcPx8RCwocTkvP6Udw2DyXtC+45tu3jA==",
+        "resolved": "8.9.1",
+        "contentHash": "L0vfggkkI2nDAW9lCFYSqX9g/+3TkVXhAq+sh6owBq656X9XW0kE2NG+dPYGNQGeK66HS1rKHRPWMm1bMv91kw==",
         "dependencies": {
           "Microsoft.Bcl.TimeProvider": "8.0.0"
         }
@@ -864,7 +864,7 @@
           "Newtonsoft.Json": "[13.0.4, )",
           "Npgsql": "[7.0.10, )",
           "PdfPig": "[0.1.16, )",
-          "Polly": "[8.9.0, )",
+          "Polly": "[8.9.1, )",
           "Readarr.Common": "[1.0.0, )",
           "RestSharp": "[106.15.0, )",
           "Servarr.FluentMigrator.Runner": "[3.3.2.9, )",
@@ -1135,11 +1135,11 @@
       },
       "Polly": {
         "type": "CentralTransitive",
-        "requested": "[8.9.0, )",
-        "resolved": "8.9.0",
-        "contentHash": "k/gux3e2R/kmXXVBPmaPi/MWMEsCu6gvWfKwWYRiOtEbDljg91iP8zH5LGPpiTNyoGrmw3hrK8wY1s9rs9nluA==",
+        "requested": "[8.9.1, )",
+        "resolved": "8.9.1",
+        "contentHash": "2a+6qssytViSYiLuvUb7KeFXRcJQyTf0dWLpvtZLNBohF28oXKVExeKdU2aXXVZlVO0swuEtkhhuCK3gFaJmrw==",
         "dependencies": {
-          "Polly.Core": "8.9.0"
+          "Polly.Core": "8.9.1"
         }
       },
       "RestSharp": {

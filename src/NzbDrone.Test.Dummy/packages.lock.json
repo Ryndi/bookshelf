@@ -14,9 +14,9 @@
       },
       "StyleCop.Analyzers": {
         "type": "Direct",
-        "requested": "[1.1.118, )",
-        "resolved": "1.1.118",
-        "contentHash": "Onx6ovGSqXSK07n/0eM3ZusiNdB6cIlJdabQhWGgJp3Vooy9AaLS/tigeybOJAobqbtggTamoWndz72JscZBvw=="
+        "requested": "[1.3.180, )",
+        "resolved": "1.3.180",
+        "contentHash": "/TDyrO3tUJOsnyTazvaX+qwwBt4aixQLNLtxmkyWQZE94IOZ9PnClHrwKUVn/NSXdXUUWrKMHTtlxUkZ1F8JWg=="
       },
       "Microsoft.Build.Tasks.Git": {
         "type": "Transitive",
@@ -31,7 +31,6 @@
     },
     "net6.0/linux-musl-arm64": {},
     "net6.0/linux-musl-x64": {},
-    "net6.0/linux-x64": {},
-    "net6.0/win-x64": {}
+    "net6.0/linux-x64": {}
   }
 }
