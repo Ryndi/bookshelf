@@ -36,9 +36,9 @@
       },
       "StyleCop.Analyzers": {
         "type": "Direct",
-        "requested": "[1.1.118, )",
-        "resolved": "1.1.118",
-        "contentHash": "Onx6ovGSqXSK07n/0eM3ZusiNdB6cIlJdabQhWGgJp3Vooy9AaLS/tigeybOJAobqbtggTamoWndz72JscZBvw=="
+        "requested": "[1.3.180, )",
+        "resolved": "1.3.180",
+        "contentHash": "/TDyrO3tUJOsnyTazvaX+qwwBt4aixQLNLtxmkyWQZE94IOZ9PnClHrwKUVn/NSXdXUUWrKMHTtlxUkZ1F8JWg=="
       },
       "Microsoft.Build.Tasks.Git": {
         "type": "Transitive",
@@ -429,12 +429,12 @@
           "Microsoft.SourceLink.GitHub": "[1.1.1, )",
           "Microsoft.Win32.Registry": "[5.0.0, )",
           "NLog": "[5.1.5, )",
-          "NLog.Extensions.Logging": "[5.2.3, )",
+          "NLog.Extensions.Logging": "[5.2.5, )",
           "Newtonsoft.Json": "[13.0.4, )",
           "SharpZipLib": "[1.4.2, )",
           "System.Configuration.ConfigurationManager": "[6.0.2, )",
           "System.Data.SQLite.Core.Servarr": "[1.0.115.5-18, )",
-          "System.IO.Abstractions": "[17.0.24, )",
+          "System.IO.Abstractions": "[17.2.3, )",
           "System.Runtime.Loader": "[4.3.0, )",
           "System.ServiceProcess.ServiceController": "[6.0.1, )",
           "System.Text.Json": "[6.0.10, )",
@@ -508,13 +508,13 @@
       },
       "NLog.Extensions.Logging": {
         "type": "CentralTransitive",
-        "requested": "[5.2.3, )",
-        "resolved": "5.2.3",
-        "contentHash": "TB8zPGV2nVpvWq5C8zIVHPSmnzOHMrXppjsAwHcuJq1Ehs8sC0llnAv5Ysf5Lf/vew9amV/+01MohtRFSDzKdQ==",
+        "requested": "[5.2.5, )",
+        "resolved": "5.2.5",
+        "contentHash": "+lOeJQ7FlYUzGrWhVedb+VrW78YOEgP7uSCGZYwWe7RaH1t081ssNZbSbiO4vlF7LjW0MM6Nlt0RdPe8N24F2w==",
         "dependencies": {
           "Microsoft.Extensions.Configuration.Abstractions": "6.0.0",
           "Microsoft.Extensions.Logging": "6.0.0",
-          "NLog": "5.1.3"
+          "NLog": "5.1.5"
         }
       },
       "SharpZipLib": {
@@ -541,9 +541,9 @@
       },
       "System.IO.Abstractions": {
         "type": "CentralTransitive",
-        "requested": "[17.0.24, )",
-        "resolved": "17.0.24",
-        "contentHash": "hA7bacntMiZv1Yf9xtjwl/GP3GT1mG84QxhAk7ijAUD0pJhJaVVwXScE13vMpXnNtlaRDW6SeyZdWg2j2qrh4w=="
+        "requested": "[17.2.3, )",
+        "resolved": "17.2.3",
+        "contentHash": "VcozGeE4SxIo0cnXrDHhbrh/Gb8KQnZ3BvMelvh+iw0PrIKtuuA46U2Xm4e4pgnaWFgT4RdZfTpWl/WPRdw0WQ=="
       },
       "System.Runtime.Loader": {
         "type": "CentralTransitive",
