@@ -41,6 +41,11 @@ updates:
         versions: [">= 17.2.26"]
       - dependency-name: "System.IO.Abstractions.TestingHelpers"
         versions: [">= 17.2.26"]
+      # StyleCop.Analyzers 1.3.180, its first stable release after 1.1.118, adds and
+      # tightens rules: 223 findings in 124 files, and warnings are errors here.
+      # Upstream (klein1jo/bookshelf) is on 1.1.118 too.
+      - dependency-name: "StyleCop.Analyzers"
+        versions: [">= 1.3.0"]
 
   - package-ecosystem: "npm"
     directory: "/"
