@@ -30,7 +30,7 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
     <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
-    <PackageVersion Include="Mono.Posix.NETStandard" Version="5.20.1.34-servarr22" />
+    <PackageVersion Include="Mono.Posix.NETStandard" Version="5.20.1.34-servarr24" />
     <PackageVersion Include="Moq" Version="4.17.2" />
     <PackageVersion Include="MonoTorrent" Version="2.0.7" />
     <PackageVersion Include="NBuilder" Version="6.1.0" />
